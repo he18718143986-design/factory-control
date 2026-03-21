@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E8EDF4">
+
+    <!-- ════════════════════════════════════════════════
+         IDLE / DISCOVERING — 轻量、中性
+    ════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/layoutIdle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="40dp">
+
+        <TextView
+            android:id="@+id/tvIdleTitle"
+            android:text="请稍候"
+            android:textSize="22sp"
+            android:textColor="#334155"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="12dp" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvIdleStatus"
+            android:text="保持本页打开即可"
+            android:textSize="15sp"
+            android:textColor="#64748B"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="28dp" />
+
+        <Button
+            android:id="@+id/btnScanEntry"
+            android:text="扫描入场码"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="#64748B"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- ════════════════════════════════════════════════
+         WAITING
+    ════════════════════════════════════════════════ -->
+    <ScrollView
+        android:id="@+id/layoutWaiting"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingHorizontal="28dp"
+            android:paddingVertical="36dp">
+
+            <TextView
+                android:id="@+id/tvWaitingTitle"
+                android:text=""
+                android:textSize="20sp"
+                android:textColor="#334155"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvWaitingMsg"
+                android:text=""
+                android:textSize="15sp"
+                android:textColor="#64748B"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp" />
+
+            <!-- 首次：系统授权 -->
+            <LinearLayout
+                android:id="@+id/panelFirstTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/btnGrantAccessibility"
+                    android:text="去设置"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:backgroundTint="#94A3B8"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:id="@+id/tvShowManualSteps"
+                    android:text="查看说明 ▾"
+                    android:textSize="14sp"
+                    android:textColor="#64748B"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="10dp" />
+            </LinearLayout>
+
+            <!-- 技术说明（折叠，出错或主动展开） -->
+            <LinearLayout
+                android:id="@+id/panelManualSteps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="如自动完成失败，可按下列步骤操作（测试/运维用）"
+                    android:textSize="12sp"
+                    android:textColor="#94A3B8"
+                    android:layout_marginBottom="10dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/step_card_bg"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:text="①"
+                        android:textSize="18sp"
+                        android:textColor="#64748B"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:background="@drawable/step_num_bg"
+                        android:layout_marginEnd="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:text="开启开发者模式"
+                            android:textSize="14sp"
+                            android:textColor="#334155"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            android:text="设置 → 关于手机 → 连续点击「版本号」7 次"
+                            android:textSize="12sp"
+                            android:textColor="#64748B"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/step_card_bg"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:text="②"
+                        android:textSize="18sp"
+                        android:textColor="#64748B"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:background="@drawable/step_num_bg"
+                        android:layout_marginEnd="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:text="打开无线调试"
+                            android:textSize="14sp"
+                            android:textColor="#334155"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            android:text="设置 → 开发者选项 → 打开「无线调试」"
+                            android:textSize="12sp"
+                            android:textColor="#64748B"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnOpenWirelessDebug"
+                    android:text="打开开发者选项"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#E2E8F0"
+                    android:textColor="#475569"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+            </LinearLayout>
+
+            <!-- 自动进行中：仅转圈 + 一句话 -->
+            <LinearLayout
+                android:id="@+id/panelWorkingSimple"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingVertical="32dp"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/progressBarWaitingMain"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="20dp" />
+
+                <TextView
+                    android:id="@+id/tvWaitingWorkingHint"
+                    android:text="正在完成入场设置，请稍候"
+                    android:textSize="16sp"
+                    android:textColor="#475569"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- 三步详情：默认隐藏，仅调试或必要时在代码中打开 -->
+            <LinearLayout
+                android:id="@+id/panelAutoSetup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/step_card_bg"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="12dp">
+                        <ProgressBar
+                            android:id="@+id/progressStep1"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
+                        <TextView
+                            android:id="@+id/iconStep1"
+                            android:text="○"
+                            android:textSize="18sp"
+                            android:textColor="#64748B"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:background="@drawable/step_num_bg" />
+                    </FrameLayout>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="步骤 1"
+                        android:textColor="#64748B"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvStep1Status"
+                        android:visibility="gone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/step_card_bg"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="12dp">
+                        <ProgressBar
+                            android:id="@+id/progressStep2"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
+                        <TextView
+                            android:id="@+id/iconStep2"
+                            android:text="○"
+                            android:textSize="18sp"
+                            android:textColor="#64748B"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:background="@drawable/step_num_bg" />
+                    </FrameLayout>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="步骤 2"
+                        android:textColor="#64748B"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvStep2Status"
+                        android:visibility="gone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/step_card_bg_highlight"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="12dp">
+                        <ProgressBar
+                            android:id="@+id/progressStep3"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
+                        <TextView
+                            android:id="@+id/iconStep3"
+                            android:text="○"
+                            android:textSize="18sp"
+                            android:textColor="#64748B"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:background="@drawable/step_num_bg" />
+                    </FrameLayout>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="步骤 3"
+                        android:textColor="#64748B"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvStep3Status"
+                        android:visibility="gone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/panelFailureActions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/btnViewHelp"
+                    android:text="查看说明"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#E2E8F0"
+                    android:textColor="#475569"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btnFallbackManual"
+                    android:text="打开系统设置"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#E2E8F0"
+                    android:textColor="#475569"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btnRetryConnect"
+                    android:text="重试连接"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#CBD5E1"
+                    android:textColor="#475569"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    android:layout_marginBottom="8dp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnExportLogs"
+                android:text="下载调试日志"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:backgroundTint="#F1F5F9"
+                android:textColor="#64748B"
+                android:textSize="13sp"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- ════════════════════════════════════════════════
+         RESTRICTED
+    ════════════════════════════════════════════════ -->
+    <FrameLayout
+        android:id="@+id/layoutRestricted"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F1F5F9"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingHorizontal="36dp">
+
+            <TextView
+                android:text="✓"
+                android:textSize="64sp"
+                android:textColor="#64748B"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="20dp" />
+
+            <TextView
+                android:text="您已进入访客区域"
+                android:textSize="22sp"
+                android:textColor="#334155"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/tvRestrictedMsg"
+                android:text="离场时请扫描离场码"
+                android:textSize="16sp"
+                android:textColor="#64748B"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="请遵守厂区管理规定"
+                android:textSize="11sp"
+                android:textColor="#94A3B8"
+                android:gravity="center"
+                android:layout_marginBottom="40dp" />
+
+            <Button
+                android:id="@+id/btnScanExit"
+                android:text="扫描离场码"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:backgroundTint="#64748B"
+                android:textColor="#FFFFFF"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- ════════════════════════════════════════════════
+         EXITING / EXITED
+    ════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/layoutExited"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="40dp"
+        android:visibility="gone"
+        android:background="#E8EDF4">
+
+        <ProgressBar
+            android:id="@+id/progressBarExit"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvExitedIcon"
+            android:text="✓"
+            android:textSize="56sp"
+            android:textColor="#64748B"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvExitedMsg"
+            android:text=""
+            android:textSize="18sp"
+            android:textColor="#475569"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- DEBUG：离场/办理中仍可导出（含关开发者选项等无障碍日志）；默认隐藏由代码控制 -->
+        <Button
+            android:id="@+id/btnExportLogsExit"
+            android:text="下载调试日志"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="28dp"
+            android:backgroundTint="#F1F5F9"
+            android:textColor="#64748B"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</FrameLayout>

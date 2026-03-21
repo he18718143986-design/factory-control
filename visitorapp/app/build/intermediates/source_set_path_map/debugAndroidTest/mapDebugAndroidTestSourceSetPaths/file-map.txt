@@ -1,0 +1,5 @@
+com.factory.control.test.app-jetified-core-1.6.1-0 /Users/97jiyu/.gradle/caches/9.0.0/transforms/5d3012d62d549346514a44716d61e3bc/transformed/jetified-core-1.6.1/res
+com.factory.control.test.app-androidTest-1 /Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/build/generated/res/resValues/androidTest/debug
+com.factory.control.test.app-mergeDebugAndroidTestResources-2 /Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
+com.factory.control.test.app-mergeDebugAndroidTestResources-3 /Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
+com.factory.control.test.app-debugAndroidTest-4 /Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources

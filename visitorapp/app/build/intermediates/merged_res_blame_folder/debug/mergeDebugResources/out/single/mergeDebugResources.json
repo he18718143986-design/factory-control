@@ -1,0 +1,62 @@
+[
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_step_num_bg.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/step_num_bg.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.factory.control.app-main-34:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/xml_device_admin_receiver.xml.flat",
+        "source": "com.factory.control.app-main-34:/xml/device_admin_receiver.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.factory.control.app-main-34:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_badge_auto_bg.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/badge_auto_bg.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_step_card_bg_highlight.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/step_card_bg_highlight.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/mipmap_ic_launcher.xml.flat",
+        "source": "com.factory.control.app-main-34:/mipmap/ic_launcher.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/xml_accessibility_service_config.xml.flat",
+        "source": "com.factory.control.app-main-34:/xml/accessibility_service_config.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_step_card_bg_warn.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/step_card_bg_warn.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_step_card_bg.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/step_card_bg.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/layout_activity_main.xml.flat",
+        "source": "com.factory.control.app-main-34:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_restricted_grid_bg.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/restricted_grid_bg.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/mipmap_ic_launcher_round.xml.flat",
+        "source": "com.factory.control.app-main-34:/mipmap/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.factory.control.app-debug-32:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.factory.control.app-main-34:/drawable/ic_launcher_background.xml"
+    }
+]

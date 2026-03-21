@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>厂区访客管控系统</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+:root {
+  --bg:         #f4f6fb;
+  --surface:    #ffffff;
+  --surface2:   #f1f5fb;
+  --surface3:   #e8eef8;
+  --border:     #e3e8f1;
+  --border2:    #d2dbea;
+  --text:       #1f2a44;
+  --text-dim:   #5b6785;
+  --text-bright:#0f172a;
+  --accent:     #0ea5e9;
+  --accent-dim: #d7f0ff;
+  --green:      #16a34a;
+  --green-dim:  #dcfce7;
+  --yellow:     #f59e0b;
+  --yellow-dim: #ffedd5;
+  --red:        #ef4444;
+  --red-dim:    #fee2e2;
+  --mono:       'IBM Plex Mono', monospace;
+  --sans:       'Noto Sans SC', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background:
+    radial-gradient(1200px 600px at -10% -10%, #e6f1ff 0%, transparent 60%),
+    radial-gradient(800px 400px at 110% 0%, #fff7e6 0%, transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Subtle pattern overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Header ─── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 28px;
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo-mark {
+  width: 28px; height: 28px;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-dim);
+}
+.logo-mark svg { width: 14px; height: 14px; fill: var(--accent); }
+
+header h1 {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--text-bright);
+  text-transform: uppercase;
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.server-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.server-status .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(22, 163, 74, 0.4);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .4; }
+}
+
+/* ─── Layout ─── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-height: 90px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-bright);
+  line-height: 1.1;
+}
+.stat-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.stat-card.warn {
+  border-color: #fecaca;
+  background: #fff1f2;
+}
+.stat-card.warn .stat-value {
+  color: #b91c1c;
+}
+
+/* ─── Sidebar ─── */
+aside {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-home {
+  padding: 12px 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-home-item {
+  width: 100%;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text-bright);
+  min-height: 52px;
+  padding: 14px 12px;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.nav-home-item:hover { border-color: var(--accent); }
+.nav-home-item.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.sidebar-header span {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.btn-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.btn-new:hover  { background: #2563eb; }
+.btn-new:active { transform: scale(.97); }
+
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.session-list::-webkit-scrollbar { width: 4px; }
+.session-list::-webkit-scrollbar-track { background: transparent; }
+.session-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.session-item {
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .15s, border-color .15s;
+  margin-bottom: 4px;
+}
+.session-item:hover { background: var(--surface2); }
+.session-item.active {
+  background: var(--surface2);
+  border-color: var(--border2);
+}
+
+.session-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.visitor-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-bright);
+}
+
+.status-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: .04em;
+  font-weight: 600;
+}
+.badge-waiting   { background: var(--surface3); color: var(--text-dim); }
+.badge-pairing   { background: var(--yellow-dim); color: #b45309; }
+.badge-paired_not_connected { background: #fff3cd; color: #b45309; }
+.badge-restricted{ background: var(--accent-dim); color: #0369a1; }
+.badge-exiting   { background: var(--surface3); color: var(--text-dim); }
+.badge-exited    { background: var(--green-dim); color: #166534; }
+.badge-error     { background: var(--red-dim); color: #991b1b; }
+
+.session-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ─── Main content ─── */
+main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+main::-webkit-scrollbar { width: 4px; }
+main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ─── Empty state ─── */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-dim);
+}
+.empty-state .big-icon {
+  font-size: 56px;
+  filter: grayscale(1) opacity(.3);
+}
+.empty-state p { font-size: 13px; }
+
+/* ─── Detail view ─── */
+.detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-header {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+}
+
+.detail-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+.detail-subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  font-family: var(--mono);
+}
+
+.detail-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all .15s;
+}
+.btn-outline {
+  background: transparent;
+  border-color: var(--border2);
+  color: var(--text);
+}
+.btn-outline:hover { background: var(--surface2); }
+.btn-danger {
+  background: transparent;
+  border-color: var(--red);
+  color: var(--red);
+}
+.btn-danger:hover { background: var(--red-dim); }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: #2563eb; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.detail-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1fr;
+  grid-auto-rows: auto;
+  gap: 16px;
+  padding: 20px 24px 28px;
+  background: transparent;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+/* ─── QR section ─── */
+.qr-triplet {
+  grid-column: 1 / -1;
+  padding: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface2);
+}
+
+.qr-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.qr-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--border2);
+  background: #fff;
+}
+.qr-wrap img { width: 100%; height: 100%; object-fit: contain; }
+
+.qr-footer {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+  max-width: none;
+}
+
+.qr-step {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--text-dim);
+}
+.qr-step .num {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: #0369a1;
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+/* Status box */
+.status-box {
+  padding: 18px;
+}
+
+.status-box-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-bright);
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  min-height: 48px;
+}
+.status-hint {
+  margin-top: -12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--yellow);
+}
+
+.progress-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.step-icon {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  transition: all .3s;
+}
+.step.done   .step-icon { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+.step.active .step-icon { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); animation: step-pulse 1.5s infinite; }
+.step.error  .step-icon { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+
+@keyframes step-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,.4); }
+  50%      { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+
+.step-text { color: var(--text); line-height: 1.4; padding-top: 1px; }
+.step.done  .step-text { color: var(--text-dim); }
+
+/* ─── Info + Logs ─── */
+.info-panel {
+  padding: 18px 20px;
+  overflow-y: auto;
+}
+.info-panel::-webkit-scrollbar { width: 3px; }
+.info-panel::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.info-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-key { color: var(--text-dim); }
+.info-val { color: var(--text-bright); font-family: var(--mono); font-size: 12px; }
+
+.log-panel {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.guide-panel {
+  padding: 18px 20px;
+}
+.guide-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+.guide-note {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.result-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+}
+.result-item.done {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+.result-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border2);
+}
+.result-item.done .dot {
+  background: #22c55e;
+}
+
+.result-item.warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+.result-item.warn .dot {
+  background: #f59e0b;
+}
+
+.log-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.log-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.log-list::-webkit-scrollbar { width: 3px; }
+.log-list::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.log-entry {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 2px 0;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.log-entry.info  { color: var(--text); }
+.log-entry.error { color: var(--red); }
+
+/* ─── Modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  display: none;
+  place-items: center;
+  z-index: 1000;
+}
+.modal-overlay.open { display: grid; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  width: 420px;
+  padding: 28px;
+  box-shadow: 0 24px 64px rgba(15,23,42,.18);
+}
+
+.modal h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 6px;
+}
+.modal p {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+}
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+.form-group input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-bright);
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s;
+}
+.form-group input:focus { border-color: var(--accent); }
+.form-group input::placeholder { color: var(--text-dim); }
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* ─── 自助入场面板 ─── */
+.checkin-banner {
+  display: grid;
+  grid-template-columns: 220px 1fr 280px;
+  align-items: stretch;
+  gap: 12px;
+  background: transparent;
+  padding: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  height: 100%;
+}
+.checkin-areas-side {
+  width: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--text-dim);
+  box-sizing: border-box;
+}
+.checkin-area-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.checkin-area-card.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.checkin-area-name {
+  font-size: 12px;
+  color: var(--text-bright);
+}
+.checkin-area-count {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.checkin-area-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-family: var(--mono);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.checkin-area-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.checkin-area-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-dim);
+}
+.checkin-qr-side {
+  flex: 1;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+.checkin-qr-side img { width: 160px; height: 160px; border-radius: 10px; display: block; box-shadow: 0 10px 20px rgba(15,23,42,.15); }
+.checkin-qr-label { font-size: 11px; color: var(--text-dim); font-family: var(--mono); letter-spacing:.08em; margin-top: 2px; text-transform: uppercase; }
+.checkin-queue-side {
+  width: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  min-height: 550px;
+}
+.checkin-queue-header {
+  min-height: 40px;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  letter-spacing:.08em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.queue-badge { background: var(--accent-dim); color: #0369a1; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-family: var(--mono); }
+.checkin-queue-list { flex:1; overflow-y:auto; max-height:800px; padding:10px; display:flex; flex-direction:column; gap:8px; }
+.queue-item {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 84px;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.queue-item:hover { border-color: var(--accent); }
+.queue-item-qr   { width:180px; height:180px; border-radius:6px; flex-shrink:0; }
+.queue-item-info { flex:1; min-width:0; }
+.queue-item-name { font-size:12px; color:var(--text-bright); margin-bottom:2px; }
+.queue-item-hint { font-size:11px; color:var(--text-dim); }
+.queue-empty     { padding:24px 0; text-align:center; font-size:12px; color:var(--text-dim); }
+
+/* ─── Guide overlay (step-by-step for visitor) ─── */
+.guide-steps {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guide-step {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+}
+.guide-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ─── Home dashboard (right side) ─── */
+.home-dashboard {
+  flex: 1;
+  padding: 22px 24px 30px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.home-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-overview {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-checkin-banner {
+  display: grid;
+  grid-template-columns: minmax(400px, 1fr) minmax(400px, 1.35fr);
+  gap: 14px;
+  align-items: start;
+  background: transparent;
+}
+
+.checkin-combined-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  gap: 14px;
+  align-items: start;
+  min-height: 550px;
+}
+
+.area-select-panel {
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  background: var(--surface2);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: none;
+}
+
+.area-select-panel .title {
+  font-size: 11px;
+  color: var(--text-bright);
+  font-weight: 700;
+  font-family: var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.area-select-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.area-select {
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  height: 34px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text);
+  background: #fff;
+}
+
+.checkin-qr-side.large img {
+  width: 300px;
+  height: 300px;
+}
+
+.checkin-combined-panel .checkin-qr-side.large {
+  width: 100%;
+}
+
+/* 组合面板内仅保留外层总框，去掉子框 */
+.checkin-combined-panel .area-select-panel {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 2px 0 0;
+}
+
+.checkin-combined-panel .checkin-qr-side {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 4px 0 0;
+}
+
+.home-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.flow-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.flow-summary .name {
+  font-size: 13px;
+  color: var(--text-bright);
+  font-weight: 600;
+}
+.flow-summary .state {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+}
+.flow-summary .track-select {
+  margin-left: auto;
+  min-width: 220px;
+  max-width: 320px;
+  background: #fff;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.flow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.flow-step {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+}
+.flow-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  background: #fff;
+}
+.flow-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.flow-title {
+  font-size: 13px;
+  color: var(--text-bright);
+  font-weight: 600;
+}
+.flow-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.flow-time {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+}
+
+.flow-step.done {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+.flow-step.done .flow-dot {
+  border-color: #22c55e;
+  color: #166534;
+  background: #dcfce7;
+}
+.flow-step.active {
+  border-color: #7dd3fc;
+  background: #eff6ff;
+}
+.flow-step.active .flow-dot {
+  border-color: #0ea5e9;
+  color: #0369a1;
+  background: #dbeafe;
+}
+.flow-step.warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+.flow-step.warn .flow-dot {
+  border-color: #f59e0b;
+  color: #b45309;
+  background: #fef3c7;
+}
+
+@media (max-width: 800px) {
+  .layout { flex-direction: column; }
+  aside { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+  main { min-height: 60vh; }
+  .detail-body { grid-template-columns: 1fr; }
+  .qr-triplet { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+  .home-dashboard { max-width: none; }
+  .home-overview { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+  .home-checkin-banner { grid-template-columns: 1fr; }
+  .checkin-combined-panel { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .qr-triplet { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+  </div>
+  <h1>Factory Access Control</h1>
+  <div class="header-right">
+    <div class="server-status">
+      <span class="dot"></span>
+      <span id="serverAddr">连接中…</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-home">
+      <button id="navHome" class="nav-home-item active" onclick="selectHome()">
+        首页
+      </button>
+    </div>
+    <div class="sidebar-header">
+      <span>访客列表</span>
+    </div>
+    <div class="session-list" id="sessionList">
+      <div style="padding:40px 20px;text-align:center;color:var(--text-dim);font-size:12px;">
+        暂无访客<br>访客扫码自助入场后将在此显示
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main id="mainContent">
+    <div class="empty-state">
+      <div class="big-icon">🏭</div>
+      <p>选择左侧访客查看详情</p>
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────
+const API = '';   // 同源，相对路径
+let ws = null;
+let activeSessionId = null;
+let activeView = 'home'; // home | session
+let homeTrackedSessionId = null;
+let checkinQrData = '';
+const sessionsMap = new Map();   // id → session
+const ADMIN_TOKEN_KEY = 'admin_token';
+
+function getAdminToken() {
+  return localStorage.getItem(ADMIN_TOKEN_KEY) || '';
+}
+
+async function fetchWithAuth(url, options = {}) {
+  const headers = Object.assign({}, options.headers || {});
+  const token = getAdminToken();
+  if (token) headers['x-admin-token'] = token;
+  let res = await fetch(url, Object.assign({}, options, { headers }));
+  if (res.status === 401) {
+    const input = (prompt('请输入后台口令：') || '').trim();
+    if (input) {
+      localStorage.setItem(ADMIN_TOKEN_KEY, input);
+      headers['x-admin-token'] = input;
+      res = await fetch(url, Object.assign({}, options, { headers }));
+    }
+  }
+  return res;
+}
+
+// ─── 自助入场：厂区列表 + 常驻入场码 ───────────────────────────
+let CHECKIN_AREAS = ['全厂区', '车间 A', '车间 B', '仓库区'];
+let currentCheckinArea = '全厂区';
+
+async function loadCheckinQR() {
+  try {
+    const area = (currentCheckinArea || '').trim();
+    const url = area ? `/api/checkin-qr?area=${encodeURIComponent(area)}` : '/api/checkin-qr';
+    const res  = await fetchWithAuth(url);
+    const data = await res.json();
+    if (data.qr) checkinQrData = data.qr;
+    if (activeView === 'home') renderHomeDashboard();
+  } catch (_) {
+    // 略过加载失败，后续可在页面上提示
+  }
+}
+
+function renderCheckinAreaTabs() {
+  const select = document.getElementById('checkinAreaSelect');
+  if (!select) return;
+  const current = (currentCheckinArea || '').trim() || '全厂区';
+  select.innerHTML = CHECKIN_AREAS.map(area => {
+    const selected = area === current ? 'selected' : '';
+    return `<option value="${esc(area)}" ${selected}>${esc(area)}</option>`;
+  }).join('');
+}
+
+function onSelectCheckinArea(area) {
+  currentCheckinArea = area;
+  renderCheckinAreaTabs();
+  loadCheckinQR();
+}
+
+function onAreaSelectChange(value) {
+  currentCheckinArea = value || '全厂区';
+  renderCheckinAreaTabs();
+  loadCheckinQR();
+}
+
+function onAddCheckinArea() {
+  const name = (prompt('请输入新厂区名称：') || '').trim();
+  if (!name) return;
+  if (!CHECKIN_AREAS.includes(name)) {
+    CHECKIN_AREAS.push(name);
+  }
+  currentCheckinArea = name;
+  renderCheckinAreaTabs();
+  loadCheckinQR();
+}
+
+function onEditCheckinArea(area) {
+  const idx = CHECKIN_AREAS.indexOf(area);
+  if (idx === -1) return;
+  const next = (prompt('重命名厂区：', area) || '').trim();
+  if (!next) return;
+  if (CHECKIN_AREAS.includes(next) && next !== area) {
+    alert('已存在同名厂区。');
+    return;
+  }
+  CHECKIN_AREAS[idx] = next;
+  if (currentCheckinArea === area) currentCheckinArea = next;
+  renderCheckinAreaTabs();
+  loadCheckinQR();
+}
+
+function onDeleteCheckinArea(area) {
+  if (CHECKIN_AREAS.length <= 1) {
+    alert('至少保留一个厂区。');
+    return;
+  }
+  const idx = CHECKIN_AREAS.indexOf(area);
+  if (idx === -1) return;
+  if (!confirm(`确定删除厂区「${area}」吗？`)) return;
+  CHECKIN_AREAS.splice(idx, 1);
+  if (currentCheckinArea === area) {
+    currentCheckinArea = CHECKIN_AREAS[0] || '全厂区';
+  }
+  renderCheckinAreaTabs();
+  loadCheckinQR();
+}
+
+// ─── WebSocket ────────────────────────────────────────────────
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+
+  ws.onmessage = e => {
+    try {
+      const msg = JSON.parse(e.data);
+      handleWsMessage(msg);
+    } catch {}
+  };
+
+  ws.onopen = () => {
+    document.getElementById('serverAddr').textContent =
+      location.host + ' — 已连接';
+  };
+
+  ws.onclose = () => {
+    document.getElementById('serverAddr').textContent = '连接断开，3s 后重连…';
+    setTimeout(connectWS, 3000);
+  };
+}
+
+function handleWsMessage(msg) {
+  switch (msg.event) {
+    case 'sessionCreated':
+    case 'sessionUpdate':
+      updateSession(msg.session);
+      renderSessionList();
+      if (activeView === 'session' && activeSessionId === msg.session.id) renderDetail(msg.session.id);
+      if (activeView === 'home') renderHomeDashboard();
+      break;
+    case 'status':
+      if (activeSessionId) {
+        updateStatusUI(msg.status, msg.message);
+      }
+      break;
+    case 'log':
+      if (activeSessionId) appendLog(msg.message, msg.type);
+      break;
+  }
+}
+
+// ─── Session list ─────────────────────────────────────────────
+function updateSession(s) { sessionsMap.set(s.id, s); }
+
+function renderSessionList() {
+  renderCheckinQueue();   // 同步刷新待配对队列
+  renderStats();
+  syncNavState();
+  const el = document.getElementById('sessionList');
+  if (sessionsMap.size === 0) {
+    el.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-dim);font-size:12px;">暂无访客<br>访客扫码自助入场后将在此显示</div>';
+    return;
+  }
+  const sorted = [...sessionsMap.values()].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+  el.innerHTML = sorted.map(s => `
+    <div class="session-item ${activeView === 'session' && s.id === activeSessionId ? 'active' : ''}"
+         onclick="selectSession('${s.id}')">
+      <div class="session-item-top">
+        <span class="visitor-name">${s.selfCheckin ? '[自助] ' : ''}${esc(s.visitorName)}</span>
+        <span class="status-badge badge-${s.status}">${statusLabel(s.status)}</span>
+      </div>
+      <div class="session-meta">
+        <span>${s.visitorCompany ? esc(s.visitorCompany) : '—'}</span>
+        <span>${esc(s.area)}</span>
+        <span>${timeAgo(s.createdAt)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderStats() {
+  const total = sessionsMap.size;
+  let waiting = 0;
+  let paired = 0;
+  let restricted = 0;
+  let errors = 0;
+  sessionsMap.forEach(s => {
+    if (s.status === 'waiting') waiting++;
+    if (s.status === 'paired_not_connected') paired++;
+    if (s.status === 'restricted') restricted++;
+    if (s.status === 'error') errors++;
+  });
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val);
+  };
+  set('statTotal', total);
+  set('statWaiting', waiting);
+  set('statPaired', paired);
+  set('statRestricted', restricted);
+  set('statError', errors);
+}
+
+// ─── 自助入场：右侧「待扫 ADB 配对码」队列 ─────────────────────
+function renderCheckinQueue() {
+  const listEl  = document.getElementById('checkinQueueList');
+  const badgeEl = document.getElementById('queueBadge');
+  if (!listEl || !badgeEl) return;
+
+  const pending = [...sessionsMap.values()]
+    .filter(s => s.selfCheckin && s.status === 'waiting')
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  badgeEl.textContent = pending.length.toString();
+
+  if (pending.length === 0) {
+    listEl.innerHTML = '<div class="queue-empty">暂无等待配对的访客</div>';
+    return;
+  }
+
+  listEl.innerHTML = pending.map(s => `
+    <div class="queue-item" onclick="selectSession('${s.id}')">
+      <img class="queue-item-qr" src="${s.entryQR || ''}" alt="ADB 配对码"/>
+      <div class="queue-item-info">
+        <div class="queue-item-name">${esc(s.visitorName)}</div>
+        <div class="queue-item-hint">${formatTime(s.createdAt)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function statusLabel(s) {
+  return {
+    waiting:'WAITING',
+    pairing:'PAIRING',
+    paired_not_connected:'CONNECTION LOST',
+    restricted:'PROTECTED',
+    exiting:'EXITING',
+    exited:'EXITED',
+    error:'ERROR',
+  }[s] || s;
+}
+
+function statusEmoji(s) {
+  return { waiting:'⏳', pairing:'📡', paired_not_connected:'⚠️', restricted:'🔒',
+           exiting:'🚪', exited:'✅', error:'❌' }[s] || '•';
+}
+
+// ─── Detail view ──────────────────────────────────────────────
+function selectSession(id) {
+  activeView = 'session';
+  activeSessionId = id;
+  homeTrackedSessionId = id;
+  renderSessionList();
+  renderDetail(id);
+
+  // 订阅该会话的 WS 事件（重连 WS 并带上 sessionId）
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const sessionWs = new WebSocket(`${proto}://${location.host}?sessionId=${id}`);
+  sessionWs.onmessage = e => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.event === 'init') { updateSession(msg.session); renderDetail(id); }
+      if (msg.event === 'status' && activeSessionId === id) updateStatusUI(msg.status, msg.message);
+      if (msg.event === 'log'    && activeSessionId === id) appendLog(msg.message, msg.type);
+    } catch {}
+  };
+}
+
+function syncNavState() {
+  const navHome = document.getElementById('navHome');
+  if (!navHome) return;
+  navHome.classList.toggle('active', activeView === 'home');
+}
+
+function selectHome() {
+  activeView = 'home';
+  activeSessionId = null;
+  renderSessionList();
+  renderHomeDashboard();
+}
+
+function latestSession() {
+  const list = [...sessionsMap.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return list[0] || null;
+}
+
+function getHomeTrackedSession() {
+  if (homeTrackedSessionId && sessionsMap.has(homeTrackedSessionId)) {
+    return sessionsMap.get(homeTrackedSessionId);
+  }
+  const latest = latestSession();
+  homeTrackedSessionId = latest ? latest.id : null;
+  return latest;
+}
+
+function setHomeTrackedSession(id) {
+  homeTrackedSessionId = id || null;
+  if (activeView === 'home') renderHomeDashboard();
+}
+
+function buildHomeSessionOptions(selectedId) {
+  const sorted = [...sessionsMap.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  if (!sorted.length) return '<option value="">暂无访客</option>';
+  return sorted.map(s => {
+    const selected = s.id === selectedId ? 'selected' : '';
+    const name = esc(s.visitorName || '访客');
+    const area = esc(s.area || '全厂区');
+    return `<option value="${s.id}" ${selected}>${name} · ${area} · ${statusLabel(s.status)}</option>`;
+  }).join('');
+}
+
+function parseLogEntries(session) {
+  return (session.logs || []).map(line => {
+    const m = String(line).match(/^\[(\d{2}:\d{2}:\d{2})\]\s*(.*)$/);
+    return { time: m ? m[1] : '--:--:--', message: m ? m[2] : String(line) };
+  });
+}
+
+function findStepTime(entries, patterns) {
+  for (const e of entries) {
+    if (patterns.some(p => p.test(e.message))) return e.time;
+  }
+  return '--:--:--';
+}
+
+function hasStep(entries, patterns) {
+  return entries.some(e => patterns.some(p => p.test(e.message)));
+}
+
+function buildRealtimeFlow() {
+  const s = getHomeTrackedSession();
+  if (!s) {
+    return `
+      <div class="flow-summary">
+        <span class="name">暂无访客</span>
+        <span class="state">等待访客入场</span>
+      </div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-dot">·</div>
+          <div class="flow-body">
+            <div class="flow-title">暂无实时连接事件</div>
+            <div class="flow-meta">访客扫码入场后，这里会显示 APP 上报、配对、连接与管控下发过程。</div>
+            <div class="flow-time">--:--:--</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const entries = parseLogEntries(s);
+  const appReported = hasStep(entries, [/APP 已上报 IP/]);
+  const pairStarted = hasStep(entries, [/执行 adb pair/, /正在建立 ADB 配对/]);
+  const connected = hasStep(entries, [/ADB 设备已就绪/, /设备上线 → adb connect/, /已配对但未连接/, /全部管控指令已下发/]);
+  const restricted = ['restricted', 'exiting', 'exited'].includes(s.status) || hasStep(entries, [/管控已生效/, /全部管控指令已下发/]);
+  const connectionLost = s.status === 'paired_not_connected';
+
+  const t1 = findStepTime(entries, [/APP 已上报 IP/]);
+  const t2 = findStepTime(entries, [/执行 adb pair/, /正在建立 ADB 配对/]);
+  const t3 = findStepTime(entries, [/ADB 设备已就绪/, /设备上线 → adb connect/, /已配对但未连接/]);
+  const t4 = findStepTime(entries, [/管控已生效/, /全部管控指令已下发/]);
+
+  const steps = [
+    {
+      title: 'APP 上报',
+      desc: '访客打开 App 后上报 device IP',
+      time: t1,
+      state: appReported ? 'done' : (s.status === 'waiting' ? 'active' : ''),
+      icon: appReported ? '1' : '1',
+    },
+    {
+      title: 'ADB Pair',
+      desc: '发现配对广播并执行 adb pair',
+      time: t2,
+      state: pairStarted ? 'done' : (appReported && !connected ? 'active' : ''),
+      icon: pairStarted ? '2' : '2',
+    },
+    {
+      title: 'ADB Connect',
+      desc: connectionLost ? '连接中断/未建立，请重试连接' : '等待 connect 广播并建立连接',
+      time: t3,
+      state: connectionLost ? 'warn' : (connected ? 'done' : (pairStarted ? 'active' : '')),
+      icon: connectionLost ? '!' : '3',
+    },
+    {
+      title: 'Restricted',
+      desc: restricted ? '管控策略已下发' : '等待策略下发',
+      time: t4,
+      state: restricted ? 'done' : (connected && !connectionLost ? 'active' : ''),
+      icon: restricted ? '4' : '4',
+    },
+  ];
+
+  return `
+    <div class="flow-summary">
+      <span class="name">${esc(s.visitorName)} · ${esc(s.area)}</span>
+      <span class="state">当前状态：${statusLabel(s.status)}</span>
+      <select class="track-select" onchange="setHomeTrackedSession(this.value)">
+        ${buildHomeSessionOptions(s.id)}
+      </select>
+    </div>
+    <div class="flow-steps">
+      ${steps.map(step => `
+        <div class="flow-step ${step.state}">
+          <div class="flow-dot">${step.icon}</div>
+          <div class="flow-body">
+            <div class="flow-title">${step.title}</div>
+            <div class="flow-meta">${step.desc}</div>
+            <div class="flow-time">${step.time}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function buildPolicyLights() {
+  const tracked = getHomeTrackedSession();
+  const isProtected = tracked && tracked.status === 'restricted';
+  const isLost = tracked && tracked.status === 'paired_not_connected';
+  return `
+    <div class="result-item ${isProtected ? 'done' : ''}">
+      <span class="dot"></span><span>屏幕截图限制（基于状态/日志）</span>
+    </div>
+    <div class="result-item ${isProtected ? 'done' : ''}">
+      <span class="dot"></span><span>相机应用冻结（基于状态/日志）</span>
+    </div>
+    <div class="result-item ${isLost ? 'warn' : (isProtected ? 'done' : '')}">
+      <span class="dot"></span><span>ADB 连接状态（${tracked ? statusLabel(tracked.status) : 'UNKNOWN'}）</span>
+    </div>
+  `;
+}
+
+function renderHomeDashboard() {
+  renderStats();
+  renderCheckinAreaTabs();
+  const pending = [...sessionsMap.values()]
+    .filter(s => s.selfCheckin && s.status === 'waiting')
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  document.getElementById('mainContent').innerHTML = `
+    <div class="home-dashboard">
+      <div class="home-main">
+        <div class="home-overview">
+          <div class="stat-card">
+            <div class="stat-label">总访客</div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-hint">当前列表</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">等待配对</div>
+            <div class="stat-value" id="statWaiting">0</div>
+            <div class="stat-hint">waiting</div>
+          </div>
+          <div class="stat-card warn">
+            <div class="stat-label">已配对未连接</div>
+            <div class="stat-value" id="statPaired">0</div>
+            <div class="stat-hint">paired_not_connected</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">管控中</div>
+            <div class="stat-value" id="statRestricted">0</div>
+            <div class="stat-hint">restricted</div>
+          </div>
+          <div class="stat-card warn">
+            <div class="stat-label">异常访客</div>
+            <div class="stat-value" id="statError">0</div>
+            <div class="stat-hint">error</div>
+          </div>
+        </div>
+
+        <div class="home-checkin-banner">
+          <div class="checkin-combined-panel">
+            <div class="area-select-panel">
+              <div class="title">厂区列表</div>
+              <div class="area-select-row">
+                <select id="checkinAreaSelect" class="area-select" onchange="onAreaSelectChange(this.value)"></select>
+                <button type="button" class="checkin-area-action" title="新增" onclick="onAddCheckinArea()">+</button>
+                <button type="button" class="checkin-area-action" title="重命名" onclick="onEditCheckinArea(currentCheckinArea)">✎</button>
+                <button type="button" class="checkin-area-action" title="删除" onclick="onDeleteCheckinArea(currentCheckinArea)">×</button>
+              </div>
+              <div class="guide-note" style="margin:0;">下拉选择厂区并生成对应入场二维码</div>
+            </div>
+
+            <div class="checkin-qr-side large">
+              <img id="checkinQRImg" src="${checkinQrData || ''}" alt="自助入场码" />
+              <span class="checkin-qr-label">自助入场码</span>
+            </div>
+          </div>
+
+          <div class="checkin-queue-side">
+            <div class="checkin-queue-header">
+              <span>待扫 ADB 配对码</span>
+              <span class="queue-badge" id="queueBadge">${pending.length}</span>
+            </div>
+            <div class="checkin-queue-list" id="checkinQueueList">
+              ${pending.length ? pending.map(s => `
+                <div class="queue-item" onclick="selectSession('${s.id}')">
+                  <img class="queue-item-qr" src="${s.entryQR || ''}" alt="ADB 配对码"/>
+                  <div class="queue-item-info">
+                    <div class="queue-item-name">${esc(s.visitorName)}</div>
+                    <div class="queue-item-hint">${formatTime(s.createdAt)}</div>
+                  </div>
+                </div>
+              `).join('') : '<div class="queue-empty">暂无等待配对的访客</div>'}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  renderStats();
+  renderCheckinAreaTabs();
+}
+
+function renderDetail(id) {
+  const s = sessionsMap.get(id);
+  if (!s) return;
+  const qrData = `
+    <div class="qr-card">
+      <div class="qr-step"><span class="num">1</span>入场登记</div>
+      <div class="qr-label">入场码（访客扫码登记）</div>
+      <div class="qr-wrap">${checkinQrData ? `<img src="${checkinQrData}" alt="入场码"/>` : ''}</div>
+      <div class="qr-footer">访客扫码填写信息并打开 App</div>
+    </div>
+    <div class="qr-card">
+      <div class="qr-step"><span class="num">2</span>无线配对</div>
+      <div class="qr-label">ADB 配对码（访客扫码）</div>
+      <div class="qr-wrap">${s.entryQR ? `<img src="${s.entryQR}" alt="ADB配对码"/>` : ''}</div>
+      <div class="qr-footer">开发者选项 → 无线调试 → 使用二维码配对设备</div>
+    </div>
+    <div class="qr-card">
+      <div class="qr-step"><span class="num">3</span>离场解除</div>
+      <div class="qr-label">离厂码（访客扫码离场）</div>
+      <div class="qr-wrap">${s.exitQR ? `<img src="${s.exitQR}" alt="离厂码"/>` : ''}</div>
+      <div class="qr-footer">访客在 App 内点击“扫码离厂”扫此码</div>
+    </div>
+  `;
+
+  const steps = buildSteps(s.status);
+  const resultDone = s.status === 'restricted';
+  const resultItems = [
+    '截屏/录屏已限制',
+    '相机 App 已冻结',
+    'AppOps 摄像头已禁用',
+    '控制中心截屏入口已移除'
+  ];
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="detail">
+      <div class="detail-header">
+        <div>
+          <div class="detail-title">${esc(s.visitorName)}</div>
+          <div class="detail-subtitle">
+            ${s.visitorCompany ? esc(s.visitorCompany) + ' · ' : ''}${esc(s.area)} &nbsp;·&nbsp; ${esc(s.wifiSsid)} &nbsp;·&nbsp; ${formatTime(s.createdAt)}
+          </div>
+        </div>
+        <div class="detail-actions">
+          ${s.status === 'error' && s.deviceId ? `<button class="btn btn-outline" onclick="retrySession('${s.id}')">🔄 重试</button>` : ''}
+          ${s.status === 'paired_not_connected' ? `<button class="btn btn-outline" onclick="retryConnect('${s.id}', this)">🔌 重试连接</button>` : ''}
+          ${s.status === 'restricted' ? `<button class="btn btn-danger" onclick="forceExit('${s.id}')">强制离厂</button>` : ''}
+        </div>
+      </div>
+
+      <div class="detail-body">
+        <div class="qr-triplet panel">
+          ${qrData}
+        </div>
+
+        <div class="status-box panel">
+          <div class="status-box-title">实时状态</div>
+          <div class="status-indicator" id="statusIndicator">
+            ${statusEmoji(s.status)} ${getStatusMsg(s.status)}
+          </div>
+          ${s.status === 'paired_not_connected' ? `
+            <div class="status-hint">原因：${reasonLabel(s.pairedNotConnectedReason)}</div>
+          ` : ''}
+          <div class="progress-steps" id="progressSteps">
+            ${steps}
+          </div>
+          <div class="status-box-title" style="margin-top:16px;">管控结果</div>
+          <div class="result-list">
+            ${resultItems.map(item => `
+              <div class="result-item ${resultDone ? 'done' : ''}">
+                <span class="dot"></span>
+                <span>${item}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="info-panel panel">
+          <div class="info-title">访客信息</div>
+          <div class="info-row"><span class="info-key">访客姓名</span><span class="info-val">${esc(s.visitorName)}</span></div>
+          <div class="info-row"><span class="info-key">公司 / 单位</span><span class="info-val">${s.visitorCompany ? esc(s.visitorCompany) : '—'}</span></div>
+          <div class="info-row"><span class="info-key">进入区域</span><span class="info-val">${esc(s.area)}</span></div>
+          <div class="info-row"><span class="info-key">厂区 WiFi</span><span class="info-val">${esc(s.wifiSsid)}</span></div>
+          <div class="info-row"><span class="info-key">设备 ID</span><span class="info-val">${s.deviceId || '—'}</span></div>
+          <div class="info-row"><span class="info-key">管控时间</span><span class="info-val">${s.restrictedAt ? formatTime(s.restrictedAt) : '—'}</span></div>
+          <div class="info-row"><span class="info-key">离厂时间</span><span class="info-val">${s.exitedAt ? formatTime(s.exitedAt) : '—'}</span></div>
+          <div class="info-row"><span class="info-key">访客 ID</span><span class="info-val" style="font-size:10px;word-break:break-all">${s.id}</span></div>
+
+          <div class="guide-steps" style="margin-top:16px">
+            <div class="info-title">访客操作引导</div>
+            <div class="guide-step"><div class="guide-num">1</div><div>手机连接厂区 WiFi：<b>${esc(s.wifiSsid)}</b></div></div>
+            <div class="guide-step"><div class="guide-num">2</div><div>打开「厂区管控」APP，等待自动配置</div></div>
+            <div class="guide-step"><div class="guide-num">3</div><div>若失败：设置 → 开发者选项 → 打开「无线调试」</div></div>
+            <div class="guide-step"><div class="guide-num">4</div><div>点击「使用二维码配对设备」，扫描“ADB 配对码”</div></div>
+          </div>
+        </div>
+
+        <!-- Log panel -->
+        <div class="log-panel panel">
+          <div class="log-title">操作日志</div>
+          <div class="log-list" id="logList">
+            ${(s.logs || []).map(l => `<div class="log-entry info">${esc(l)}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 滚动日志到底部
+  const ll = document.getElementById('logList');
+  if (ll) ll.scrollTop = ll.scrollHeight;
+}
+
+function buildSteps(status) {
+  const steps = [
+    { key: 'app',      label: 'APP 已上报设备 IP',  doneAt: ['pairing','paired_not_connected','restricted','exiting','exited'] },
+    { key: 'adb',      label: 'ADB 配对 & 连接成功', doneAt: ['restricted','exiting','exited'] },
+    { key: 'restrict', label: '管控指令已下发',       doneAt: ['restricted','exiting','exited'] },
+    { key: 'exit',     label: '访客已离厂',           doneAt: ['exited'] },
+  ];
+
+  const activeMap = { waiting: '', pairing: 'app', paired_not_connected: 'adb', restricted: 'adb', exiting: 'exit', error: '' };
+  const activeKey = activeMap[status] || '';
+
+  return steps.map((s, i) => {
+    const done   = s.doneAt.includes(status);
+    const active = !done && s.key === activeKey;
+    const cls    = done ? 'done' : active ? 'active' : '';
+    const icon   = done ? '✓' : (i + 1).toString();
+    return `
+      <div class="step ${cls}" id="step_${s.key}">
+        <div class="step-icon">${icon}</div>
+        <div class="step-text">${s.label}</div>
+      </div>`;
+  }).join('');
+}
+
+function getStatusMsg(status) {
+  return {
+    waiting:    '等待 APP 上报设备…',
+    pairing:    '等待访客扫 ADB 配对码…',
+    paired_not_connected: '已配对但未连接，请重试连接',
+    restricted: '管控已生效',
+    exiting:    '正在解除管控…',
+    exited:     '访客已离厂',
+    error:      '发生错误，请查看日志',
+  }[status] || status;
+}
+
+function reasonLabel(reason) {
+  return {
+    mdns_connect_missing: '未收到 connect 广播',
+    adb_connect_failed: 'adb connect 失败',
+    not_in_adb_devices: '设备未出现在 adb devices',
+  }[reason] || reason || '—';
+}
+
+function updateStatusUI(status, message) {
+  const si = document.getElementById('statusIndicator');
+  if (si) si.innerHTML = `${statusEmoji(status)} ${message}`;
+
+  const ps = document.getElementById('progressSteps');
+  if (ps) ps.innerHTML = buildSteps(status);
+
+  // 更新内存中的会话状态
+  if (activeSessionId && sessionsMap.has(activeSessionId)) {
+    sessionsMap.get(activeSessionId).status = status;
+    renderSessionList();
+  }
+}
+
+function appendLog(message, type = 'info') {
+  const ll = document.getElementById('logList');
+  if (!ll) return;
+  const div = document.createElement('div');
+  const ts = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  div.className = `log-entry ${type}`;
+  div.textContent = `[${ts}] ${message}`;
+  ll.appendChild(div);
+  ll.scrollTop = ll.scrollHeight;
+}
+
+// ─── Actions ─────────────────────────────────────────────────
+
+async function retrySession(id) {
+  const res = await fetchWithAuth(`/api/sessions/${id}/retry`, { method: 'POST' });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert('重试失败：' + (data.error || ('HTTP ' + res.status)));
+  } else {
+    alert('已触发重试，请稍候…');
+  }
+}
+
+async function retryConnect(id, btn) {
+  const s = sessionsMap.get(id);
+  if (!s) return;
+  if (btn && btn.dataset.busy === '1') return;
+  if (!confirm(`确认重试 ${s.visitorName} 的 ADB 连接？`)) return;
+  if (btn) {
+    btn.dataset.busy = '1';
+    btn.disabled = true;
+    btn.textContent = '🔌 重试中…';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.dataset.busy = '0';
+      btn.textContent = '🔌 重试连接';
+    }, 8000);
+  }
+  const res = await fetchWithAuth(`/api/sessions/${id}/retry-connect`, { method: 'POST' });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert('重试连接失败：' + (data.error || ('HTTP ' + res.status)));
+  } else {
+    alert('已触发重试连接，请稍候…');
+  }
+}
+
+async function forceExit(id) {
+  const s = sessionsMap.get(id);
+  if (!s) return;
+  if (!confirm(`确认强制解除 ${s.visitorName} 的管控并离厂？`)) return;
+  const res = await fetchWithAuth(`/api/sessions/${id}/force-exit`, { method: 'POST' });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert('强制离厂失败：' + (data.error || ('HTTP ' + res.status)));
+  }
+}
+
+// ─── Load sessions ────────────────────────────────────────────
+async function loadSessions() {
+  try {
+    const res = await fetchWithAuth('/api/sessions');
+    const list = await res.json();
+    list.forEach(s => sessionsMap.set(s.id, s));
+    renderSessionList();
+    renderHomeDashboard();
+
+    // Server addr
+    const info = await fetchWithAuth('/api/info').then(r => r.json());
+    document.getElementById('serverAddr').textContent =
+      `${info.serverIp}:${info.port}`;
+  } catch {}
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function formatTime(t) {
+  if (!t) return '—';
+  return new Date(t).toLocaleString('zh-CN', { hour12: false });
+}
+function timeAgo(t) {
+  const diff = Date.now() - new Date(t);
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' 分钟前';
+  return Math.floor(diff/3600000) + ' 小时前';
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+renderCheckinAreaTabs();
+loadCheckinQR();
+loadSessions();
+connectWS();
+</script>
+</body>
+</html>

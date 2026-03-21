@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/xml/accessibility_service_config.xml
+    SetupAutomationService 的无障碍服务配置
+
+    关键配置说明：
+    - canRetrieveWindowContent="true"  必须开启，否则 rootInActiveWindow 返回 null
+    - accessibilityEventTypes          监听窗口状态变化和内容变化，驱动状态机
+    - accessibilityFeedbackType        FEEDBACK_GENERIC 通用类型
+    - notificationTimeout              事件合并窗口，100ms 可减少重复触发
+    - packageNames                     留空表示监听所有 App（需要监听系统设置 App）
+-->
+<accessibility-service
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagReportViewIds|flagRequestFilterKeyEvents"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/accessibility_service_description"
+    android:notificationTimeout="100"
+    android:settingsActivity=".MainActivity" />

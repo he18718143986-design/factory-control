@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/xml/device_admin_receiver.xml
+
+    最小权限原则：只申请 setScreenCaptureDisabled() 实际需要的一项策略。
+    系统授权弹窗会把 uses-policies 里的每一项都展示给访客，
+    多余策略（wipe-data / reset-password / force-lock 等）会让访客拒绝授权。
+-->
+<device-admin>
+    <uses-policies>
+        <disable-camera />
+    </uses-policies>
+</device-admin>

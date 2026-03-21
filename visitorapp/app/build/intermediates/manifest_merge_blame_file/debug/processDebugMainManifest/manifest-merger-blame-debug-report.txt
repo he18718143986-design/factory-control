@@ -1,0 +1,337 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.factory.control"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="34" />
+10
+11    <!-- 网络 -->
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:6:5-67
+12-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:6:22-64
+13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+13-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:7:5-79
+13-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:7:22-76
+14    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+14-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:8:5-76
+14-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:8:22-73
+15    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+15-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:9:5-76
+15-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:9:22-73
+16    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+16-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:10:5-79
+16-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:10:22-76
+17
+18    <!-- 前台服务（保活） -->
+19    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+19-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:13:5-77
+19-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:13:22-74
+20    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+20-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:14:5-94
+20-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:14:22-91
+21    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+21-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:15:5-87
+21-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:15:22-84
+22    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+22-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:16:5-81
+22-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:16:22-78
+23    <!-- Android 13+ 通知权限（不声明则前台服务通知静默失败，部分机型还会抛异常） -->
+24    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+24-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:18:5-77
+24-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:18:22-74
+25
+26    <!-- 相机（访客扫码离厂使用） -->
+27    <uses-permission android:name="android.permission.CAMERA" />
+27-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:21:5-65
+27-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:21:22-62
+28
+29    <!--
+30        设备管理权限（用于禁止截屏）
+31        注：BIND_DEVICE_ADMIN 是系统级保护权限，三方 App 无需在此声明；
+32             此处声明是为了显式说明意图，实际激活通过 ACTION_ADD_DEVICE_ADMIN 引导。
+33    -->
+34    <uses-permission
+34-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:28:5-29:47
+35        android:name="android.permission.BIND_DEVICE_ADMIN"
+35-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:28:22-73
+36        android:protectionLevel="signature" />
+36-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:29:9-44
+37
+38    <permission
+38-->[androidx.core:core:1.13.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/ed934d6025e716021a8061a4697cfa33/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+39        android:name="com.factory.control.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+39-->[androidx.core:core:1.13.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/ed934d6025e716021a8061a4697cfa33/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+40        android:protectionLevel="signature" />
+40-->[androidx.core:core:1.13.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/ed934d6025e716021a8061a4697cfa33/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+41
+42    <uses-permission android:name="com.factory.control.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" /> <!-- Don't require camera, as this requires a rear camera. This allows it to work on the Nexus 7 -->
+42-->[androidx.core:core:1.13.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/ed934d6025e716021a8061a4697cfa33/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+42-->[androidx.core:core:1.13.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/ed934d6025e716021a8061a4697cfa33/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+43    <uses-feature
+43-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:25:5-27:36
+44        android:name="android.hardware.camera"
+44-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:26:9-47
+45        android:required="false" />
+45-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:27:9-33
+46    <uses-feature
+46-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:28:5-30:36
+47        android:name="android.hardware.camera.front"
+47-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:29:9-53
+48        android:required="false" /> <!-- TODO replace above two with next line after Android 4.2 -->
+48-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:30:9-33
+49    <!-- <uses-feature android:name="android.hardware.camera.any"/> -->
+50    <uses-feature
+50-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:33:5-35:36
+51        android:name="android.hardware.camera.autofocus"
+51-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:34:9-57
+52        android:required="false" />
+52-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:35:9-33
+53    <uses-feature
+53-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:36:5-38:36
+54        android:name="android.hardware.camera.flash"
+54-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:37:9-53
+55        android:required="false" />
+55-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:38:9-33
+56    <uses-feature
+56-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:39:5-41:36
+57        android:name="android.hardware.screen.landscape"
+57-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:40:9-57
+58        android:required="false" />
+58-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:41:9-33
+59    <uses-feature
+59-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:42:5-44:36
+60        android:name="android.hardware.wifi"
+60-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:43:9-45
+61        android:required="false" />
+61-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:44:9-33
+62
+63    <application
+63-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:31:5-108:19
+64        android:name="com.factory.control.App"
+64-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:32:9-28
+65        android:allowBackup="false"
+65-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:33:9-36
+66        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+66-->[androidx.core:core:1.13.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/ed934d6025e716021a8061a4697cfa33/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+67        android:debuggable="true"
+68        android:extractNativeLibs="false"
+69        android:icon="@mipmap/ic_launcher"
+69-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:34:9-43
+70        android:label="厂区管控"
+70-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:35:9-29
+71        android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
+71-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:36:9-77
+72        android:usesCleartextTraffic="true" >
+72-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:37:9-44
+73
+74        <!-- 主界面 -->
+75        <activity
+75-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:40:9-61:20
+76            android:name="com.factory.control.MainActivity"
+76-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:41:13-41
+77            android:exported="true"
+77-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:42:13-36
+78            android:launchMode="singleTask" >
+78-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:43:13-44
+79
+80            <!-- 桌面启动 -->
+81            <intent-filter>
+81-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:46:13-49:29
+82                <action android:name="android.intent.action.MAIN" />
+82-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:47:17-69
+82-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:47:25-66
+83
+84                <category android:name="android.intent.category.LAUNCHER" />
+84-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:48:17-77
+84-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:48:27-74
+85            </intent-filter>
+86
+87            <!--
+88                URL Scheme 唤起：factorycontrol://checkin?sessionId=xxx&server=http://ip:port
+89                微信欢迎页检测到 APP 已安装后，通过此 Scheme 传入 sessionId 和 server 地址
+90            -->
+91            <intent-filter>
+91-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:55:13-60:29
+92                <action android:name="android.intent.action.VIEW" />
+92-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:56:17-69
+92-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:56:25-66
+93
+94                <category android:name="android.intent.category.DEFAULT" />
+94-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:57:17-76
+94-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:57:27-73
+95                <category android:name="android.intent.category.BROWSABLE" />
+95-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:58:17-78
+95-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:58:27-75
+96
+97                <data
+97-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:59:17-80
+98                    android:host="checkin"
+98-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:59:55-77
+99                    android:scheme="factorycontrol" />
+99-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:59:23-54
+100            </intent-filter>
+101        </activity>
+102
+103        <!-- 无障碍自动化服务 -->
+104        <service
+104-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:64:9-74:19
+105            android:name="com.factory.control.SetupAutomationService"
+105-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:65:13-51
+106            android:exported="true"
+106-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:66:13-36
+107            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+107-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:67:13-79
+108            <intent-filter>
+108-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:68:13-70:29
+109                <action android:name="android.accessibilityservice.AccessibilityService" />
+109-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:69:17-92
+109-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:69:25-89
+110            </intent-filter>
+111
+112            <meta-data
+112-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:71:13-73:72
+113                android:name="android.accessibilityservice"
+113-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:72:17-60
+114                android:resource="@xml/accessibility_service_config" />
+114-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:73:17-69
+115        </service>
+116
+117        <!-- 管控前台保活服务 -->
+118        <service
+118-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:77:9-80:72
+119            android:name="com.factory.control.ControlService"
+119-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:78:13-43
+120            android:exported="false"
+120-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:79:13-37
+121            android:foregroundServiceType="connectedDevice|dataSync" />
+121-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:80:13-69
+122
+123        <!-- 开机自启：确保访客仍在厂区时管控持续有效 -->
+124        <receiver
+124-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:83:9-89:20
+125            android:name="com.factory.control.BootReceiver"
+125-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:84:13-41
+126            android:exported="true" >
+126-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:85:13-36
+127            <intent-filter>
+127-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:86:13-88:29
+128                <action android:name="android.intent.action.BOOT_COMPLETED" />
+128-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:87:17-79
+128-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:87:25-76
+129            </intent-filter>
+130        </receiver>
+131
+132        <!--
+133            Device Admin Receiver
+134            [BUG-3 修复] 补充 meta-data 引用 device_admin_receiver.xml，
+135            并在 AdminReceiver.requestActivation() 中通过 ACTION_ADD_DEVICE_ADMIN 触发激活流程
+136        -->
+137        <receiver
+137-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:96:9-106:20
+138            android:name="com.factory.control.AdminReceiver"
+138-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:97:13-42
+139            android:exported="true"
+139-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:98:13-36
+140            android:permission="android.permission.BIND_DEVICE_ADMIN" >
+140-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:99:13-70
+141            <meta-data
+141-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:100:13-102:65
+142                android:name="android.app.device_admin"
+142-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:101:17-56
+143                android:resource="@xml/device_admin_receiver" />
+143-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:102:17-62
+144
+145            <intent-filter>
+145-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:103:13-105:29
+146                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+146-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:104:17-82
+146-->/Users/97jiyu/Downloads/工作资料/0307厂区禁用app/visitor-mdm-wifi/finish/visitorapp/app/src/main/AndroidManifest.xml:104:25-79
+147            </intent-filter>
+148        </receiver>
+149
+150        <provider
+150-->[androidx.emoji2:emoji2:1.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/8f0717eaf96befd3df8cab91a9f040f5/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+151            android:name="androidx.startup.InitializationProvider"
+151-->[androidx.emoji2:emoji2:1.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/8f0717eaf96befd3df8cab91a9f040f5/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:25:13-67
+152            android:authorities="com.factory.control.androidx-startup"
+152-->[androidx.emoji2:emoji2:1.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/8f0717eaf96befd3df8cab91a9f040f5/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:26:13-68
+153            android:exported="false" >
+153-->[androidx.emoji2:emoji2:1.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/8f0717eaf96befd3df8cab91a9f040f5/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:27:13-37
+154            <meta-data
+154-->[androidx.emoji2:emoji2:1.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/8f0717eaf96befd3df8cab91a9f040f5/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+155                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+155-->[androidx.emoji2:emoji2:1.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/8f0717eaf96befd3df8cab91a9f040f5/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:30:17-75
+156                android:value="androidx.startup" />
+156-->[androidx.emoji2:emoji2:1.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/8f0717eaf96befd3df8cab91a9f040f5/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:31:17-49
+157            <meta-data
+157-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/97jiyu/.gradle/caches/9.0.0/transforms/146ddbd6a41b2b0356e8519e44846c33/transformed/jetified-lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
+158                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+158-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/97jiyu/.gradle/caches/9.0.0/transforms/146ddbd6a41b2b0356e8519e44846c33/transformed/jetified-lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
+159                android:value="androidx.startup" />
+159-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/97jiyu/.gradle/caches/9.0.0/transforms/146ddbd6a41b2b0356e8519e44846c33/transformed/jetified-lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
+160            <meta-data
+160-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+161                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+161-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+162                android:value="androidx.startup" />
+162-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+163        </provider>
+164
+165        <receiver
+165-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+166            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+166-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+167            android:directBootAware="false"
+167-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+168            android:enabled="true"
+168-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+169            android:exported="true"
+169-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+170            android:permission="android.permission.DUMP" >
+170-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+171            <intent-filter>
+171-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+172                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+172-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+172-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+173            </intent-filter>
+174            <intent-filter>
+174-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+175                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+175-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+175-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+176            </intent-filter>
+177            <intent-filter>
+177-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+178                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+178-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+178-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+179            </intent-filter>
+180            <intent-filter>
+180-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+181                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+181-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+181-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/97jiyu/.gradle/caches/9.0.0/transforms/c62c472fd0c983d1ab45b08c1344a0d0/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+182            </intent-filter>
+183        </receiver>
+184
+185        <activity
+185-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:47:9-53:63
+186            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+186-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:48:13-74
+187            android:clearTaskOnLaunch="true"
+187-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:49:13-45
+188            android:screenOrientation="sensorLandscape"
+188-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:50:13-56
+189            android:stateNotNeeded="true"
+189-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:51:13-42
+190            android:theme="@style/zxing_CaptureTheme"
+190-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:52:13-54
+191            android:windowSoftInputMode="stateAlwaysHidden" />
+191-->[com.journeyapps:zxing-android-embedded:4.3.0] /Users/97jiyu/.gradle/caches/9.0.0/transforms/e243b27dfe8d5653685593f97aeefbd0/transformed/jetified-zxing-android-embedded-4.3.0/AndroidManifest.xml:53:13-60
+192    </application>
+193
+194</manifest>

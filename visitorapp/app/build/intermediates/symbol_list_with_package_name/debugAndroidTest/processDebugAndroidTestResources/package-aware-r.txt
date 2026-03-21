@@ -1,0 +1,3 @@
+com.factory.control.test
+style WhiteBackgroundDialogTheme
+style WhiteBackgroundTheme
