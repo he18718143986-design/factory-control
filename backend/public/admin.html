@@ -1395,6 +1395,13 @@ function handleWsMessage(msg) {
         msg.sessionId
       );
       break;
+    case 'sessionOverdue':
+      showSecurityAlert(
+        '⏰ 管控超时',
+        `访客 ${esc(msg.visitorName)}（${esc(msg.area)}）管控已持续 ${msg.hours} 小时，请确认是否仍在厂区。\n如已离开请使用「强制离厂」解除管控。`,
+        msg.sessionId
+      );
+      break;
   }
 }
 
