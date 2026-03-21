@@ -1132,9 +1132,59 @@ main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; 
 @media (max-width: 760px) {
   .qr-triplet { grid-template-columns: 1fr; }
 }
+
+/* ─── 安全告警样式 ─── */
+.security-alert {
+  background: #fff1f2;
+  border: 2px solid #ef4444;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 24px rgba(239,68,68,.25);
+  animation: alertSlideIn .3s ease-out;
+}
+@keyframes alertSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.alert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #991b1b;
+}
+.alert-dismiss {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #991b1b;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.alert-body {
+  font-size: 13px;
+  color: #7f1d1d;
+  line-height: 1.5;
+  white-space: pre-line;
+  margin-bottom: 10px;
+}
+.alert-action {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.alert-action:hover { background: #dc2626; }
 </style>
 </head>
 <body>
+
+<!-- 安全告警容器 -->
+<div id="alertContainer" style="position:fixed;top:60px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:420px;"></div>
 
 <!-- Header -->
 <header>
@@ -1331,7 +1381,61 @@ function handleWsMessage(msg) {
     case 'log':
       if (activeSessionId) appendLog(msg.message, msg.type);
       break;
+    case 'deviceDisconnected':
+      showSecurityAlert(
+        '🚨 设备断连',
+        `管控中访客 ${esc(msg.visitorName)}（${esc(msg.area)}）的 ADB 连接已断开！\n设备: ${esc(msg.deviceId)}`,
+        msg.sessionId
+      );
+      break;
+    case 'tamperAlert':
+      showSecurityAlert(
+        '🚨 管控篡改',
+        `访客 ${esc(msg.visitorName)}（${esc(msg.area)}）的管控被篡改：\n${(msg.details || []).join('；')}`,
+        msg.sessionId
+      );
+      break;
   }
+}
+
+// ─── 安全告警系统 ──────────────────────────────────────────────
+function showSecurityAlert(title, message, sessionId) {
+  playAlertSound();
+  const container = document.getElementById('alertContainer');
+  if (!container) return;
+  const id = 'alert_' + Date.now();
+  const div = document.createElement('div');
+  div.id = id;
+  div.className = 'security-alert';
+  div.innerHTML = `
+    <div class="alert-header">
+      <strong>${title}</strong>
+      <button onclick="dismissAlert('${id}')" class="alert-dismiss">×</button>
+    </div>
+    <div class="alert-body">${esc(message)}</div>
+    ${sessionId ? `<button class="alert-action" onclick="selectSession('${sessionId}'); dismissAlert('${id}')">查看详情</button>` : ''}
+  `;
+  container.prepend(div);
+  setTimeout(() => dismissAlert(id), 30000);
+}
+function dismissAlert(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+function playAlertSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [800, 600, 800].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      gain.gain.value = 0.3;
+      osc.start(ctx.currentTime + i * 0.2);
+      osc.stop(ctx.currentTime + i * 0.2 + 0.15);
+    });
+  } catch (_) {}
 }
 
 // ─── Session list ─────────────────────────────────────────────

@@ -542,6 +542,38 @@ app.post('/api/sessions/:id/exit', async (req, res) => {
       }
     }
 
+    // ── 离厂前管控完整性验证 ──────────────────────────────────
+    let verifyReport = null;
+    if (deviceId) {
+      try {
+        verifyReport = await adbMgr.verifyRestrictions(deviceId, msg => log(session.id, msg));
+        if (verifyReport.intact) {
+          log(session.id, '✅ 管控完整性验证通过');
+        } else {
+          const details = [];
+          if (!verifyReport.frozenAppsOk)
+            details.push('相机解冻: ' + verifyReport.unfrozenPkgs.join(', '));
+          if (!verifyReport.cameraAppopsOk)
+            details.push('摄像头权限恢复: ' + verifyReport.cameraAllowedPkgs.join(', '));
+          if (!verifyReport.screenCaptureOk)
+            details.push('截屏策略已被关闭');
+          log(session.id, '🚨 管控完整性异常：' + details.join('；'), 'error');
+          session.tamperDetected = true;
+          session.tamperDetails = details;
+          markDirty();
+          broadcastAll({
+            event: 'tamperAlert',
+            sessionId: session.id,
+            visitorName: session.visitorName,
+            area: session.area,
+            details,
+          });
+        }
+      } catch (e) {
+        log(session.id, '⚠️ 管控完整性验证失败（不阻止离厂）：' + e.message);
+      }
+    }
+
     if (deviceId) {
       log(session.id, '🚪 对设备 ' + deviceId + ' 执行解除管控…');
       await adbMgr.removeRestrictions(deviceId, msg => log(session.id, msg));
@@ -558,7 +590,7 @@ app.post('/api/sessions/:id/exit', async (req, res) => {
     setStatus(session.id, 'exited', '🚪 访客已离厂，管控已全部解除');
     log(session.id, '✅ 离厂完成');
     broadcastAll({ event: 'sessionUpdate', session: serializeSession(session) });
-    res.json({ success: true });
+    res.json({ success: true, tamperDetected: !!session.tamperDetected, verifyReport });
   } catch (err) {
     log(session.id, '❌ 解除失败：' + err.message, 'error');
     setStatus(session.id, 'error', '❌ 解除管控失败：' + err.message);
@@ -595,6 +627,30 @@ app.post('/api/sessions/:id/force-exit', requireAdmin, async (req, res) => {
       }
     }
 
+    // ── 强制离厂前管控完整性验证 ──────────────────────────────
+    if (deviceId) {
+      try {
+        const verifyReport = await adbMgr.verifyRestrictions(deviceId, msg => log(session.id, msg));
+        if (!verifyReport.intact) {
+          const details = [];
+          if (!verifyReport.frozenAppsOk)
+            details.push('相机解冻: ' + verifyReport.unfrozenPkgs.join(', '));
+          if (!verifyReport.cameraAppopsOk)
+            details.push('摄像头权限恢复: ' + verifyReport.cameraAllowedPkgs.join(', '));
+          if (!verifyReport.screenCaptureOk)
+            details.push('截屏策略已被关闭');
+          log(session.id, '🚨 [强制离厂] 管控完整性异常：' + details.join('；'), 'error');
+          session.tamperDetected = true;
+          session.tamperDetails = details;
+          markDirty();
+        } else {
+          log(session.id, '✅ [强制离厂] 管控完整性验证通过');
+        }
+      } catch (e) {
+        log(session.id, '⚠️ 管控完整性验证失败（不阻止离厂）：' + e.message);
+      }
+    }
+
     if (deviceId) {
       log(session.id, '🚪 [强制离厂] 对设备 ' + deviceId + ' 执行解除管控…');
       await adbMgr.removeRestrictions(deviceId, msg => log(session.id, msg));
@@ -611,7 +667,7 @@ app.post('/api/sessions/:id/force-exit', requireAdmin, async (req, res) => {
     setStatus(session.id, 'exited', '🚪 访客已离厂（强制），管控已全部解除');
     log(session.id, '✅ 强制离厂完成');
     broadcastAll({ event: 'sessionUpdate', session: serializeSession(session) });
-    res.json({ success: true, forced: true });
+    res.json({ success: true, forced: true, tamperDetected: !!session.tamperDetected });
   } catch (err) {
     log(session.id, '❌ 强制离厂失败：' + err.message, 'error');
     setStatus(session.id, 'error', '❌ 强制离厂失败：' + err.message);
@@ -1039,8 +1095,22 @@ server.listen(PORT, async () => {
   // 3. 启动全局 mDNS 监听（等待手机扫码后广播 _adb-tls-pairing._tcp）
   mdns.startPairingListener();
 
-  // 4. 启动 ADB 设备轮询
+  // 4. 启动 ADB 设备轮询 + 断连告警
   adbMgr.startPolling();
+  adbMgr.setOnDeviceLost((lostDeviceId) => {
+    for (const [id, session] of sessions) {
+      if (session.deviceId !== lostDeviceId) continue;
+      if (session.status !== 'restricted') continue;
+      log(id, '🚨 管控中设备 ADB 连接断开：' + lostDeviceId, 'error');
+      broadcastAll({
+        event: 'deviceDisconnected',
+        sessionId: id,
+        deviceId: lostDeviceId,
+        visitorName: session.visitorName,
+        area: session.area,
+      });
+    }
+  });
 
   console.log('');
   console.log('╔═══════════════════════════════════════════════╗');
