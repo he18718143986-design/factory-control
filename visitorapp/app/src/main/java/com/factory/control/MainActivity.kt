@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity() {
     /** DEBUG：离场屏（EXITING/EXITED）上的导出，与入场等待页分离布局 */
     private var btnExportLogsExit:     Button? = null
     private var btnViewHelp:           Button? = null
+    private var btnUnlockRestricted:   Button? = null
 
     private var panelWorkingSimple:   LinearLayout? = null
     private var tvWaitingWorkingHint: TextView? = null
@@ -431,8 +432,15 @@ class MainActivity : AppCompatActivity() {
         }
         tvWaitingTitle?.visibility = View.VISIBLE
         tvWaitingMsg?.visibility = View.VISIBLE
-        tvWaitingTitle?.text = "需要完成一次系统授权"
-        tvWaitingMsg?.text = "按系统提示操作即可，仅用于本次入场"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isAccessibilityServiceEnabled()) {
+            tvWaitingTitle?.text = "需要开启无障碍服务"
+            tvWaitingMsg?.text = buildAndroid13GuidanceText()
+        } else {
+            tvWaitingTitle?.text = "需要完成一次系统授权"
+            tvWaitingMsg?.text = "按系统提示操作即可，仅用于本次入场"
+        }
+
         panelFirstTime?.visibility = View.VISIBLE
         panelWorkingSimple?.visibility = View.GONE
         panelFailureActions?.visibility = View.GONE
@@ -441,6 +449,41 @@ class MainActivity : AppCompatActivity() {
         btnRetryConnect?.visibility = View.GONE
         btnFallbackManual?.visibility = View.GONE
         btnViewHelp?.visibility = View.GONE
+    }
+
+    /**
+     * Android 13 (API 33) 起，侧载 APP 的无障碍服务被标记为"受限设置"，
+     * 需要用户先在应用信息页手动解除限制，才能在无障碍列表中开启服务开关。
+     */
+    private fun buildAndroid13GuidanceText(): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return "按系统提示操作即可，仅用于本次入场"
+        }
+        return "Android 13+ 需要额外一步：\n" +
+            "① 点击下方按钮 → 在无障碍列表中找到「厂区管控」\n" +
+            "② 若提示"受限设置"，请点击"了解详情"→"仍然允许"\n" +
+            "③ 开启「厂区管控」服务开关后返回本页\n\n" +
+            "若找不到入口，请点击「解除受限设置」按钮"
+    }
+
+    /**
+     * Android 13+ 打开本应用的"应用信息"页，用户可在此解除受限设置。
+     */
+    private fun openAppInfoForRestrictedSettings() {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = android.net.Uri.parse("package:$packageName")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+            Toast.makeText(
+                this,
+                "请在右上角菜单(⋮)中选择「允许受限设置」",
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "无法打开应用信息页：${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun showAutoSetupPanel() {
@@ -1000,9 +1043,13 @@ class MainActivity : AppCompatActivity() {
         tvStep2Status = findViewById(R.id.tvStep2Status)
         tvStep3Status = findViewById(R.id.tvStep3Status)
 
+        btnUnlockRestricted  = findViewById(R.id.btnUnlockRestricted)
         btnGrantAccessibility?.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
+        btnUnlockRestricted?.setOnClickListener { openAppInfoForRestrictedSettings() }
+        btnUnlockRestricted?.visibility =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) View.VISIBLE else View.GONE
         btnOpenWirelessDebug?.setOnClickListener { openWirelessDebugging() }
         btnFallbackManual?.setOnClickListener { openWirelessDebugging() }
         btnRetryConnect?.setOnClickListener { retryAdbConnect() }

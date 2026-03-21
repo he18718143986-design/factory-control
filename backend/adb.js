@@ -845,6 +845,11 @@ function parseDevices(output) {
 
 let pollTimer = null;
 let knownDevices = new Set();
+let onDeviceLostCallback = null;
+
+function setOnDeviceLost(callback) {
+  onDeviceLostCallback = callback;
+}
 
 function startPolling() {
   if (pollTimer) return;
@@ -866,7 +871,15 @@ function startPolling() {
         }
       }
       for (const id of knownDevices) {
-        if (!current.has(id)) knownDevices.delete(id);
+        if (!current.has(id)) {
+          knownDevices.delete(id);
+          console.log('[ADB] 设备离线: ' + id);
+          if (onDeviceLostCallback) {
+            try { onDeviceLostCallback(id); } catch (e) {
+              console.error('[ADB] onDeviceLost 回调异常:', e.message);
+            }
+          }
+        }
       }
     } catch {}
   }, 2000);
@@ -936,17 +949,91 @@ async function disconnectDevice(deviceId) {
   } catch {}
 }
 
+// ── 离厂前管控完整性验证 ──────────────────────────────────────
+
+/**
+ * 在解除管控前验证管控指令是否仍然生效。
+ * 返回 { intact: boolean, details: object } ：
+ *   intact=true  → 管控未被篡改
+ *   intact=false → 检测到异常（details 中给出具体项）
+ *
+ * @param {string}   deviceId
+ * @param {function} logFn
+ */
+async function verifyRestrictions(deviceId, logFn) {
+  const s = await buildAdbSerial(deviceId, logFn);
+  const report = {
+    intact: true,
+    frozenAppsOk: true,
+    cameraAppopsOk: true,
+    screenCaptureOk: true,
+    unfrozenPkgs: [],
+    cameraAllowedPkgs: [],
+  };
+
+  // ① 检查相机/录屏 APP 是否仍被冻结
+  const origState = await loadState(s, 'pkg_orig_state');
+  const disabledPkgs = await loadState(s, 'disabled_pkgs');
+  const pkgsToCheck = (disabledPkgs || '').split('|').filter(Boolean);
+  for (const pkg of pkgsToCheck) {
+    try {
+      const out = await adb(
+        `${s} shell "pm list packages -d '${pkg}' 2>/dev/null | grep -q 'package:${pkg}$' && echo 1 || echo 0"`,
+        8000
+      );
+      if (out.trim() !== '1') {
+        report.frozenAppsOk = false;
+        report.intact = false;
+        report.unfrozenPkgs.push(pkg);
+      }
+    } catch {}
+  }
+
+  // ② 检查关键 APP 的摄像头 appops 是否仍为 deny
+  const revokedPkgs = await loadState(s, 'revoked_pkgs');
+  const pkgsToVerify = (revokedPkgs || '').split('|').filter(Boolean).slice(0, 10);
+  for (const pkg of pkgsToVerify) {
+    try {
+      const out = await adb(
+        `${s} shell appops get ${pkg} CAMERA 2>/dev/null`,
+        8000
+      );
+      if (out && !out.includes('deny') && !out.includes('ignore')) {
+        report.cameraAppopsOk = false;
+        report.intact = false;
+        report.cameraAllowedPkgs.push(pkg);
+      }
+    } catch {}
+  }
+
+  // ③ 检查截屏策略是否仍生效
+  try {
+    const val = await adb(
+      `${s} shell settings get global policy_disable_screen_capture`,
+      8000
+    );
+    if ((val || '').trim() !== '1') {
+      report.screenCaptureOk = false;
+      report.intact = false;
+    }
+  } catch {}
+
+  return report;
+}
+
 // ── 导出 ──────────────────────────────────────────────────────
 
 module.exports = {
   startPolling,
   stopPolling,
+  setOnDeviceLost,
   pair,
   connect,
   connectWithRetry,
   resolveDeviceSerial,
   applyRestrictions,
   removeRestrictions,
+  verifyRestrictions,
   disconnectDevice,
 };
 

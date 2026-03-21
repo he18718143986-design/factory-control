@@ -76,8 +76,24 @@ const ADMIN_TOKEN = String(process.env.ADMIN_TOKEN || fileConfig.adminToken || '
 const MAX_SESSION_LOGS = Number(process.env.MAX_SESSION_LOGS) || 200;
 const SESSION_PERSIST_INTERVAL_MS = Number(process.env.SESSION_PERSIST_INTERVAL_MS) || 5000;
 
-app.use(express.json());
-app.use(cors());
+// ── 会话过期配置 ──────────────────────────────────────────────
+const SESSION_WAITING_EXPIRE_MS   = Number(process.env.SESSION_WAITING_EXPIRE_MS)   || 30 * 60 * 1000;   // waiting 30 分钟过期
+const SESSION_RESTRICTED_ALERT_MS = Number(process.env.SESSION_RESTRICTED_ALERT_MS) || 12 * 60 * 60 * 1000; // restricted 12 小时告警
+const SESSION_ERROR_CLEANUP_MS    = Number(process.env.SESSION_ERROR_CLEANUP_MS)    || 24 * 60 * 60 * 1000; // error 24 小时清理
+const SESSION_EXITED_CLEANUP_MS   = Number(process.env.SESSION_EXITED_CLEANUP_MS)   || 7 * 24 * 60 * 60 * 1000; // exited 7 天清理
+const SESSION_LIFECYCLE_CHECK_MS  = Number(process.env.SESSION_LIFECYCLE_CHECK_MS)  || 60 * 1000;  // 每 60 秒检查一次
+
+// ── 频率限制配置 ──────────────────────────────────────────────
+const CHECKIN_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 分钟窗口
+const CHECKIN_RATE_LIMIT_MAX       = Number(process.env.CHECKIN_RATE_LIMIT_MAX) || 10; // 每 IP 每分钟最多 10 次
+
+// ── 输入校验配置 ──────────────────────────────────────────────
+const MAX_VISITOR_NAME_LEN    = 50;
+const MAX_VISITOR_COMPANY_LEN = 100;
+const MAX_AREA_LEN            = 50;
+
+app.use(express.json({ limit: '100kb' }));
+app.use(cors({ origin: true, credentials: true }));
 
 // 管理后台页面认证（仅当配置 ADMIN_TOKEN）
 app.get('/admin.html', (req, res) => {
@@ -229,6 +245,86 @@ process.on('SIGINT', () => {
   } catch (_) {}
   process.exit(0);
 });
+
+// ── 会话生命周期管理 ─────────────────────────────────────────
+
+/** 已告警过 restricted 超时的会话 ID，避免重复告警 */
+const restrictedAlertedSet = new Set();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, session] of sessions) {
+    const age = now - new Date(session.createdAt).getTime();
+
+    // waiting 超过 30 分钟 → 自动过期
+    if (session.status === 'waiting' && age > SESSION_WAITING_EXPIRE_MS) {
+      session.status = 'error';
+      session.logs.push('[' + new Date().toLocaleTimeString('zh-CN', { hour12: false }) + '] ⏱️ 会话超时（等待配对超过 ' + Math.round(SESSION_WAITING_EXPIRE_MS / 60000) + ' 分钟），自动过期');
+      markDirty();
+      console.log('[lifecycle] 会话 ' + id.slice(0, 8) + ' waiting 超时，自动过期');
+      broadcastAll({ event: 'sessionUpdate', session: serializeSession(session) });
+    }
+
+    // restricted 超过 12 小时 → 告警（仅一次）
+    if (session.status === 'restricted' && session.restrictedAt) {
+      const restrictedAge = now - new Date(session.restrictedAt).getTime();
+      if (restrictedAge > SESSION_RESTRICTED_ALERT_MS && !restrictedAlertedSet.has(id)) {
+        restrictedAlertedSet.add(id);
+        const hours = Math.round(restrictedAge / 3600000);
+        log(id, '🚨 管控已持续 ' + hours + ' 小时，请确认访客是否仍在厂区', 'error');
+        broadcastAll({
+          event: 'sessionOverdue',
+          sessionId: id,
+          visitorName: session.visitorName,
+          area: session.area,
+          hours,
+        });
+      }
+    }
+
+    // error 超过 24 小时 → 清理
+    if (session.status === 'error' && age > SESSION_ERROR_CLEANUP_MS) {
+      sessions.delete(id);
+      restrictedAlertedSet.delete(id);
+      markDirty();
+      console.log('[lifecycle] 会话 ' + id.slice(0, 8) + ' error 超过 24h，已清理');
+    }
+
+    // exited 超过 7 天 → 清理
+    if (session.status === 'exited' && session.exitedAt) {
+      const exitedAge = now - new Date(session.exitedAt).getTime();
+      if (exitedAge > SESSION_EXITED_CLEANUP_MS) {
+        sessions.delete(id);
+        restrictedAlertedSet.delete(id);
+        markDirty();
+        console.log('[lifecycle] 会话 ' + id.slice(0, 8) + ' exited 超过 7 天，已清理');
+      }
+    }
+  }
+}, SESSION_LIFECYCLE_CHECK_MS);
+
+// ── 频率限制器（内存计数） ───────────────────────────────────
+
+const rateLimitMap = new Map(); // ip → { count, resetAt }
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  let entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + CHECKIN_RATE_LIMIT_WINDOW_MS };
+    rateLimitMap.set(ip, entry);
+  }
+  entry.count++;
+  return entry.count <= CHECKIN_RATE_LIMIT_MAX;
+}
+
+// 定期清理过期条目
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitMap) {
+    if (now > entry.resetAt) rateLimitMap.delete(ip);
+  }
+}, 5 * 60 * 1000);
 
 // ── 工具函数 ──────────────────────────────────────────────────
 
@@ -542,6 +638,38 @@ app.post('/api/sessions/:id/exit', async (req, res) => {
       }
     }
 
+    // ── 离厂前管控完整性验证 ──────────────────────────────────
+    let verifyReport = null;
+    if (deviceId) {
+      try {
+        verifyReport = await adbMgr.verifyRestrictions(deviceId, msg => log(session.id, msg));
+        if (verifyReport.intact) {
+          log(session.id, '✅ 管控完整性验证通过');
+        } else {
+          const details = [];
+          if (!verifyReport.frozenAppsOk)
+            details.push('相机解冻: ' + verifyReport.unfrozenPkgs.join(', '));
+          if (!verifyReport.cameraAppopsOk)
+            details.push('摄像头权限恢复: ' + verifyReport.cameraAllowedPkgs.join(', '));
+          if (!verifyReport.screenCaptureOk)
+            details.push('截屏策略已被关闭');
+          log(session.id, '🚨 管控完整性异常：' + details.join('；'), 'error');
+          session.tamperDetected = true;
+          session.tamperDetails = details;
+          markDirty();
+          broadcastAll({
+            event: 'tamperAlert',
+            sessionId: session.id,
+            visitorName: session.visitorName,
+            area: session.area,
+            details,
+          });
+        }
+      } catch (e) {
+        log(session.id, '⚠️ 管控完整性验证失败（不阻止离厂）：' + e.message);
+      }
+    }
+
     if (deviceId) {
       log(session.id, '🚪 对设备 ' + deviceId + ' 执行解除管控…');
       await adbMgr.removeRestrictions(deviceId, msg => log(session.id, msg));
@@ -558,7 +686,7 @@ app.post('/api/sessions/:id/exit', async (req, res) => {
     setStatus(session.id, 'exited', '🚪 访客已离厂，管控已全部解除');
     log(session.id, '✅ 离厂完成');
     broadcastAll({ event: 'sessionUpdate', session: serializeSession(session) });
-    res.json({ success: true });
+    res.json({ success: true, tamperDetected: !!session.tamperDetected, verifyReport });
   } catch (err) {
     log(session.id, '❌ 解除失败：' + err.message, 'error');
     setStatus(session.id, 'error', '❌ 解除管控失败：' + err.message);
@@ -595,6 +723,30 @@ app.post('/api/sessions/:id/force-exit', requireAdmin, async (req, res) => {
       }
     }
 
+    // ── 强制离厂前管控完整性验证 ──────────────────────────────
+    if (deviceId) {
+      try {
+        const verifyReport = await adbMgr.verifyRestrictions(deviceId, msg => log(session.id, msg));
+        if (!verifyReport.intact) {
+          const details = [];
+          if (!verifyReport.frozenAppsOk)
+            details.push('相机解冻: ' + verifyReport.unfrozenPkgs.join(', '));
+          if (!verifyReport.cameraAppopsOk)
+            details.push('摄像头权限恢复: ' + verifyReport.cameraAllowedPkgs.join(', '));
+          if (!verifyReport.screenCaptureOk)
+            details.push('截屏策略已被关闭');
+          log(session.id, '🚨 [强制离厂] 管控完整性异常：' + details.join('；'), 'error');
+          session.tamperDetected = true;
+          session.tamperDetails = details;
+          markDirty();
+        } else {
+          log(session.id, '✅ [强制离厂] 管控完整性验证通过');
+        }
+      } catch (e) {
+        log(session.id, '⚠️ 管控完整性验证失败（不阻止离厂）：' + e.message);
+      }
+    }
+
     if (deviceId) {
       log(session.id, '🚪 [强制离厂] 对设备 ' + deviceId + ' 执行解除管控…');
       await adbMgr.removeRestrictions(deviceId, msg => log(session.id, msg));
@@ -611,7 +763,7 @@ app.post('/api/sessions/:id/force-exit', requireAdmin, async (req, res) => {
     setStatus(session.id, 'exited', '🚪 访客已离厂（强制），管控已全部解除');
     log(session.id, '✅ 强制离厂完成');
     broadcastAll({ event: 'sessionUpdate', session: serializeSession(session) });
-    res.json({ success: true, forced: true });
+    res.json({ success: true, forced: true, tamperDetected: !!session.tamperDetected });
   } catch (err) {
     log(session.id, '❌ 强制离厂失败：' + err.message, 'error');
     setStatus(session.id, 'error', '❌ 强制离厂失败：' + err.message);
@@ -839,6 +991,15 @@ app.post('/api/checkin', async (req, res) => {
     const clientIp = getClientIp(req);
     const isIPv4   = /^\d{1,3}(\.\d{1,3}){3}$/.test(clientIp);
 
+    // ── 频率限制 ─────────────────────────────────────────────
+    if (!checkRateLimit(clientIp)) {
+      console.warn('[checkin] 频率限制：' + clientIp);
+      return res.status(429).json({
+        error:   'RATE_LIMITED',
+        message: '请求过于频繁，请稍后再试',
+      });
+    }
+
     // ── 检查手机是否与服务器在同一 Wi-Fi ──────────────────────
     if (isIPv4 && clientIp !== '127.0.0.1' && clientIp !== serverIp) {
       if (!isSameSubnet(serverIp, clientIp)) {
@@ -853,9 +1014,9 @@ app.post('/api/checkin', async (req, res) => {
     }
 
     const body = req.body || {};
-    const rawName    = typeof body.name === 'string' ? body.name.trim() : '';
-    const rawCompany = typeof body.company === 'string' ? body.company.trim() : '';
-    const rawArea    = typeof body.area === 'string' ? body.area.trim() : '';
+    const rawName    = typeof body.name === 'string' ? body.name.trim().slice(0, MAX_VISITOR_NAME_LEN) : '';
+    const rawCompany = typeof body.company === 'string' ? body.company.trim().slice(0, MAX_VISITOR_COMPANY_LEN) : '';
+    const rawArea    = typeof body.area === 'string' ? body.area.trim().slice(0, MAX_AREA_LEN) : '';
 
     // 幂等：同一客户端 IP 在 5 分钟内已有 waiting 会话则直接返回，避免重复建会话
     const now = Date.now();
@@ -1027,8 +1188,70 @@ wss.on('connection', (ws, req) => {
 
 // ── 启动 ──────────────────────────────────────────────────────
 
+// ── ADB 版本检查 ──────────────────────────────────────────────
+
+async function checkAdbVersion() {
+  try {
+    const { exec } = require('child_process');
+    const output = await new Promise((resolve, reject) => {
+      exec('adb version', { timeout: 5000 }, (err, stdout) => {
+        if (err) reject(err); else resolve(stdout);
+      });
+    });
+    const match = output.match(/(\d+)\.(\d+)\.(\d+)/);
+    if (match) {
+      const major = parseInt(match[1]);
+      const minor = parseInt(match[2]);
+      const version = major * 100 + minor;
+      if (version < 130) {
+        console.warn('⚠️  ADB 版本 ' + match[0] + ' 低于 1.0.30，无线调试功能可能不可用');
+        console.warn('   建议升级至 ADB >= 1.0.41（platform-tools r30+）');
+      } else {
+        console.log('[ADB] 版本检测通过：' + match[0]);
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️  ADB 未安装或不可用：' + e.message);
+    console.warn('   服务器可正常启动，但无法执行设备管控操作');
+  }
+}
+
+// ── IP 变更检测 + 入场码自动刷新 ─────────────────────────────
+
+let lastKnownServerIP = null;
+
+function startIPChangeDetection() {
+  lastKnownServerIP = getServerIP();
+  setInterval(async () => {
+    const currentIP = getServerIP();
+    if (currentIP !== lastKnownServerIP) {
+      console.log('[IP] 服务器 IP 变更：' + lastKnownServerIP + ' → ' + currentIP);
+      lastKnownServerIP = currentIP;
+      await generateCheckinQR();
+      console.log('[IP] 入场码已自动刷新');
+    }
+  }, 30 * 1000); // 每 30 秒检测一次
+}
+
+// ── 端口冲突处理 ──────────────────────────────────────────────
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error('');
+    console.error('❌ 端口 ' + PORT + ' 已被占用');
+    console.error('   请检查是否有其他实例正在运行，或使用 PORT=<其他端口> 启动');
+    console.error('   排查命令：lsof -i:' + PORT + ' 或 netstat -tlnp | grep ' + PORT);
+    console.error('');
+    process.exit(1);
+  }
+  throw err;
+});
+
 server.listen(PORT, async () => {
   const ip = getServerIP();
+
+  // 0. ADB 版本检查
+  await checkAdbVersion();
 
   // 1. 生成常驻入场码（自助模式用）
   await generateCheckinQR();
@@ -1039,19 +1262,35 @@ server.listen(PORT, async () => {
   // 3. 启动全局 mDNS 监听（等待手机扫码后广播 _adb-tls-pairing._tcp）
   mdns.startPairingListener();
 
-  // 4. 启动 ADB 设备轮询
+  // 4. 启动 ADB 设备轮询 + 断连告警
   adbMgr.startPolling();
+  adbMgr.setOnDeviceLost((lostDeviceId) => {
+    for (const [id, session] of sessions) {
+      if (session.deviceId !== lostDeviceId) continue;
+      if (session.status !== 'restricted') continue;
+      log(id, '🚨 管控中设备 ADB 连接断开：' + lostDeviceId, 'error');
+      broadcastAll({
+        event: 'deviceDisconnected',
+        sessionId: id,
+        deviceId: lostDeviceId,
+        visitorName: session.visitorName,
+        area: session.area,
+      });
+    }
+  });
+
+  // 5. 启动 IP 变更检测
+  startIPChangeDetection();
 
   console.log('');
   console.log('╔═══════════════════════════════════════════════╗');
-  console.log('║      厂区访客管控系统  v2.2  已启动           ║');
+  console.log('║      厂区访客管控系统  v2.3  已启动           ║');
   console.log('╠═══════════════════════════════════════════════╣');
   console.log('║  管理后台: http://' + ip + ':' + PORT + '/admin.html');
   console.log('║  自助入场: http://' + ip + ':' + PORT + '/api/checkin-qr');
   console.log('║  API:      http://' + ip + ':' + PORT + '/api');
   console.log('╚═══════════════════════════════════════════════╝');
   console.log('');
-  console.log('前置条件：已运行 `adb start-server`，ADB 版本 >= 30');
 });
 
 // 优雅退出
