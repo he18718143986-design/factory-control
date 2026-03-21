@@ -118,6 +118,18 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
 
+                <!-- Android 13+ 受限设置解除按钮，代码中根据 API 版本控制可见性 -->
+                <Button
+                    android:id="@+id/btnUnlockRestricted"
+                    android:text="解除受限设置"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#FEF3C7"
+                    android:textColor="#92400E"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    android:layout_marginBottom="12dp" />
+
                 <TextView
                     android:id="@+id/tvShowManualSteps"
                     android:text="查看说明 ▾"
