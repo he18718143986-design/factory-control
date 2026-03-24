@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>厂区管控 — 注册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070c18;--surface:rgba(13,21,37,.95);--border:rgba(56,189,248,.18);--accent:#38bdf8;--accent-dim:rgba(56,189,248,.1);--text:#c8d8ec;--text-dim:#4d6280;--text-bright:#e8f0fc;--red:#f87171;--green:#34d399;--mono:'IBM Plex Mono',monospace;--sans:'Noto Sans SC',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:var(--sans);color:var(--text);padding:24px 16px}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 32px;backdrop-filter:blur(20px);box-shadow:0 0 80px rgba(56,189,248,.06),0 24px 64px rgba(0,0,0,.6);animation:fadeUp .5s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.logo-icon{width:40px;height:40px;border:2px solid var(--accent);border-radius:10px;display:grid;place-items:center;background:var(--accent-dim);box-shadow:0 0 20px rgba(56,189,248,.3)}
+.logo-icon svg{width:20px;height:20px;fill:var(--accent)}
+.logo-text{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-bright)}
+.trial-card{background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:14px 16px;margin-bottom:24px}
+.trial-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px}
+.trial-desc{font-size:12px;color:rgba(52,211,153,.7);line-height:1.6}
+.price-row{display:flex;gap:10px;margin-top:8px}
+.price-item{flex:1;background:rgba(0,0,0,.3);border-radius:8px;padding:8px 10px;text-align:center}
+.price-val{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text-bright)}
+.price-label{font-size:10px;color:var(--text-dim);margin-top:2px}
+h1{font-size:20px;font-weight:700;color:var(--text-bright);margin-bottom:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.field input{width:100%;height:42px;padding:0 14px;background:rgba(255,255,255,.04);border:1px solid rgba(56,189,248,.2);border-radius:9px;color:var(--text-bright);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
+.field input::placeholder{color:var(--text-dim)}
+.field .hint{font-size:11px;color:var(--text-dim);margin-top:5px}
+.btn{width:100%;height:46px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:all .15s;margin-top:4px}
+.btn:hover{box-shadow:0 0 20px rgba(34,197,94,.3);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:14px;display:none}
+.login-link{text-align:center;margin-top:20px;font-size:13px;color:var(--text-dim)}
+.login-link a{color:var(--accent);text-decoration:none;font-weight:600}
+.login-link a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+    <div><div class="logo-text">Factory Control</div></div>
+  </div>
+
+  <div class="trial-card">
+    <div class="trial-title">🎉 注册即享 7 天免费试用</div>
+    <div class="trial-desc">无需信用卡，立即体验完整管控功能。试用期满后按厂区订阅收费。</div>
+    <div class="price-row">
+      <div class="price-item"><div class="price-val">¥99</div><div class="price-label">每月</div></div>
+      <div class="price-item"><div class="price-val">¥999</div><div class="price-label">每年（省189元）</div></div>
+    </div>
+  </div>
+
+  <h1>创建账户</h1>
+  <form id="regForm">
+    <div class="field"><label>姓名</label><input type="text" id="name" placeholder="您的姓名" required maxlength="50"></div>
+    <div class="field"><label>邮箱</label><input type="email" id="email" placeholder="your@email.com" required autocomplete="email"></div>
+    <div class="field"><label>密码</label><input type="password" id="password" placeholder="至少 8 位" required minlength="8" autocomplete="new-password"><div class="hint">密码至少 8 位字符</div></div>
+    <div class="field"><label>厂区名称</label><input type="text" id="areaName" placeholder="例如：车间A 或 仓库区" maxlength="50"><div class="hint">可选，注册后在控制台修改</div></div>
+    <button type="submit" class="btn" id="submitBtn">🚀 免费注册，立即试用</button>
+    <div class="err" id="errBox"></div>
+  </form>
+  <div class="login-link">已有账户？<a href="/login">直接登录</a></div>
+</div>
+<script>
+document.getElementById('regForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const err = document.getElementById('errBox');
+  btn.disabled = true; btn.textContent = '注册中…'; err.style.display = 'none';
+  try {
+    const r = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+      name:     document.getElementById('name').value.trim(),
+      email:    document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+      areaName: document.getElementById('areaName').value.trim(),
+    })});
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.message || '注册失败'; err.style.display = 'block'; return; }
+    window.location.href = d.redirect || '/dashboard';
+  } catch(ex) { err.textContent = '网络错误，请稍后重试'; err.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = '🚀 免费注册，立即试用'; }
+});
+</script>
+</body>
+</html>

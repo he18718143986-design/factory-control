@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>厂区管控 — 登录</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070c18;--surface:rgba(13,21,37,.95);--border:rgba(56,189,248,.18);--accent:#38bdf8;--accent-dim:rgba(56,189,248,.1);--text:#c8d8ec;--text-dim:#4d6280;--text-bright:#e8f0fc;--red:#f87171;--green:#34d399;--mono:'IBM Plex Mono',monospace;--sans:'Noto Sans SC',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:var(--sans);color:var(--text);padding:24px 16px;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 32px;backdrop-filter:blur(20px);box-shadow:0 0 80px rgba(56,189,248,.06),0 24px 64px rgba(0,0,0,.6);animation:fadeUp .5s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.logo-icon{width:40px;height:40px;border:2px solid var(--accent);border-radius:10px;display:grid;place-items:center;background:var(--accent-dim);box-shadow:0 0 20px rgba(56,189,248,.3)}
+.logo-icon svg{width:20px;height:20px;fill:var(--accent)}
+.logo-text{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-bright)}
+.logo-sub{font-size:11px;color:var(--text-dim);margin-top:2px}
+h1{font-size:22px;font-weight:700;color:var(--text-bright);margin-bottom:6px}
+.sub{font-size:13px;color:var(--text-dim);margin-bottom:28px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.field input{width:100%;height:42px;padding:0 14px;background:rgba(255,255,255,.04);border:1px solid rgba(56,189,248,.2);border-radius:9px;color:var(--text-bright);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
+.field input::placeholder{color:var(--text-dim)}
+.btn{width:100%;height:46px;background:var(--accent);color:#000;font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:all .15s;margin-top:4px}
+.btn:hover{background:#7dd3fc;box-shadow:0 0 20px rgba(56,189,248,.35)}
+.btn:active{transform:scale(.99)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.divider{text-align:center;color:var(--text-dim);font-size:12px;margin:20px 0;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+.divider::before{left:0}.divider::after{right:0}
+.link-btn{display:block;width:100%;height:46px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px}
+.link-btn:hover{border-color:var(--accent);background:var(--accent-dim)}
+.err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:16px;display:none}
+.trial-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:20px;font-size:11px;color:var(--green);margin-bottom:24px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+    <div><div class="logo-text">Factory Control</div><div class="logo-sub">厂区访客管控系统</div></div>
+  </div>
+  <div class="trial-badge">✦ 新用户免费试用 7 天</div>
+  <h1>登录账户</h1>
+  <p class="sub">登录后可管理您的订阅厂区</p>
+  <form id="loginForm">
+    <div class="field"><label>邮箱</label><input type="email" id="email" placeholder="your@email.com" required autocomplete="email"></div>
+    <div class="field"><label>密码</label><input type="password" id="password" placeholder="••••••••" required autocomplete="current-password"></div>
+    <button type="submit" class="btn" id="submitBtn">登 录</button>
+    <div class="err" id="errBox"></div>
+  </form>
+  <div class="divider">还没有账户？</div>
+  <a href="/register" class="link-btn">🆓 免费注册 · 7天试用</a>
+</div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const err = document.getElementById('errBox');
+  btn.disabled = true; btn.textContent = '登录中…'; err.style.display = 'none';
+  try {
+    const r = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value }) });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.message || '登录失败'; err.style.display = 'block'; return; }
+    window.location.href = d.redirect || '/dashboard';
+  } catch(ex) { err.textContent = '网络错误，请稍后重试'; err.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = '登 录'; }
+});
+</script>
+</body>
+</html>

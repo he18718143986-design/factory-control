@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>超管后台 — 厂区管控 SaaS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070c18;--surface:#0d1525;--surface2:#111d30;--surface3:#172236;--border:#1c2d45;--border2:#243550;--accent:#38bdf8;--accent-dim:rgba(56,189,248,.1);--accent-glow:rgba(56,189,248,.3);--text:#c8d8ec;--text-dim:#4d6280;--text-bright:#e8f0fc;--green:#34d399;--green-dim:rgba(52,211,153,.1);--yellow:#fbbf24;--red:#f87171;--red-dim:rgba(248,113,113,.1);--purple:#a78bfa;--mono:'IBM Plex Mono',monospace;--sans:'Noto Sans SC',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
+.hdr{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 20px;flex-shrink:0;position:relative;z-index:10}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent-glow),transparent)}
+.hdr-title{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-bright)}
+.hdr-badge{font-size:10px;padding:2px 8px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:3px;color:var(--purple);font-family:var(--mono)}
+.hdr-right{margin-left:auto;display:flex;gap:10px}
+.tab-nav{display:flex;gap:2px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:9}
+.tab{padding:10px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-dim);transition:all .15s;font-family:var(--sans);font-weight:500}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-family:var(--mono);margin-left:6px;padding:0 5px}
+.content{flex:1;overflow-y:auto;padding:20px 24px 32px;position:relative;z-index:2;min-height:0}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text-bright);line-height:1.1;margin-bottom:4px}
+.stat-label{font-size:11px;color:var(--text-dim)}
+.stat-card.accent .stat-val{color:var(--accent)}
+.stat-card.green  .stat-val{color:var(--green)}
+.stat-card.yellow .stat-val{color:var(--yellow)}
+.stat-card.red    .stat-val{color:var(--red)}
+
+/* table */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.tbl-head{padding:10px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(56,189,248,.02)}
+.mono{font-family:var(--mono);font-size:11px}
+.badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.badge-trial{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--green)}
+.badge-active{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:var(--accent)}
+.badge-expired{background:var(--red-dim);border-color:rgba(248,113,113,.3);color:var(--red)}
+.badge-pending{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--yellow)}
+.badge-confirmed{background:var(--green-dim);border-color:rgba(52,211,153,.3);color:var(--green)}
+.badge-rejected{background:var(--red-dim);border-color:rgba(248,113,113,.3);color:var(--red)}
+.btn-sm{padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm.green:hover{border-color:var(--green);color:var(--green)}
+.btn-sm.red:hover{border-color:var(--red);color:var(--red)}
+.btn-sm.yellow:hover{border-color:var(--yellow);color:var(--yellow)}
+.search-input{height:32px;padding:0 12px;background:var(--surface3);border:1px solid var(--border2);border-radius:7px;color:var(--text-bright);font-family:var(--sans);font-size:12px;outline:none;width:220px;transition:border-color .15s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--text-dim)}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <span class="hdr-title">Factory Control SaaS</span>
+  <span class="hdr-badge">超管后台</span>
+  <div class="hdr-right">
+    <button class="btn-sm" onclick="location.href='/dashboard'">用户控制台</button>
+    <button class="btn-sm red" onclick="logout()">退出</button>
+  </div>
+</header>
+
+<div class="tab-nav">
+  <div class="tab active" onclick="showTab('overview')">概览</div>
+  <div class="tab" onclick="showTab('payments')">待确认付款<span class="tab-badge" id="pendingCount">0</span></div>
+  <div class="tab" onclick="showTab('users')">用户管理</div>
+  <div class="tab" onclick="showTab('subscriptions')">订阅管理</div>
+</div>
+
+<div class="content" id="mainContent"></div>
+
+<script>
+let currentTab = 'overview';
+let statsData={}, usersData=[], subsData=[], pendingPayments=[];
+
+async function api(url, opts={}) {
+  const r = await fetch(url, { headers:{'Content-Type':'application/json'}, ...opts });
+  if (r.status === 401) { location.href='/login'; throw new Error('UNAUTH'); }
+  return r;
+}
+
+async function init() {
+  await loadAll();
+  showTab('overview');
+  setInterval(loadAll, 30000);
+}
+
+async function loadAll() {
+  const [s, p, u, sub] = await Promise.all([
+    api('/api/admin/stats').then(r=>r.json()),
+    api('/api/admin/payments/pending').then(r=>r.json()),
+    api('/api/admin/users').then(r=>r.json()),
+    api('/api/admin/subscriptions').then(r=>r.json()),
+  ]);
+  statsData=s; pendingPayments=p; usersData=u; subsData=sub;
+  document.getElementById('pendingCount').textContent = p.length;
+  if (currentTab) renderTab(currentTab);
+}
+
+function showTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['overview','payments','users','subscriptions'][i]===tab));
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  const el = document.getElementById('mainContent');
+  if (tab==='overview')      el.innerHTML = renderOverview();
+  else if (tab==='payments') el.innerHTML = renderPayments();
+  else if (tab==='users')    el.innerHTML = renderUsers();
+  else if (tab==='subscriptions') el.innerHTML = renderSubs();
+}
+
+function renderOverview() {
+  const s = statsData;
+  const yr = (s.totalRevenueFen||0)/100;
+  const mr = (s.monthlyRevenueFen||0)/100;
+  return `
+  <div class="stats-row">
+    <div class="stat-card accent"><div class="stat-val">${s.totalUsers||0}</div><div class="stat-label">注册用户</div></div>
+    <div class="stat-card green"><div class="stat-val">${s.activeSubsCnt||0}</div><div class="stat-label">有效订阅</div></div>
+    <div class="stat-card yellow"><div class="stat-val">${s.pendingPayCnt||0}</div><div class="stat-label">待确认付款</div></div>
+    <div class="stat-card"><div class="stat-val">¥${mr.toFixed(0)}</div><div class="stat-label">近30天收入</div></div>
+    <div class="stat-card green"><div class="stat-val">¥${yr.toFixed(0)}</div><div class="stat-label">累计收入</div></div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-head">待确认付款 ${pendingPayments.length ? `<span class="badge badge-pending">${pendingPayments.length} 条</span>` : ''}</div>
+    ${renderPaymentRows(pendingPayments.slice(0,5))}
+  </div>`;
+}
+
+function renderPayments() {
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">待确认付款（${pendingPayments.length} 条）</div>
+    ${renderPaymentRows(pendingPayments)}
+  </div>`;
+}
+
+function renderPaymentRows(list) {
+  if (!list.length) return '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">暂无待确认付款</div>';
+  return `<table><thead><tr><th>用户</th><th>邮箱</th><th>厂区</th><th>套餐</th><th>金额</th><th>流水号</th><th>提交时间</th><th>操作</th></tr></thead><tbody>
+  ${list.map(p=>`<tr>
+    <td>${esc(p.user_name)}</td>
+    <td class="mono">${esc(p.email)}</td>
+    <td>${esc(p.area_name)}</td>
+    <td><span class="badge badge-trial">${p.plan==='monthly'?'月度':'年度'}</span></td>
+    <td class="mono">¥${(p.amount_fen/100).toFixed(2)}</td>
+    <td class="mono">${esc(p.txn_id||'—')}</td>
+    <td class="mono">${new Date(p.created_at).toLocaleDateString('zh-CN')}</td>
+    <td style="display:flex;gap:6px">
+      <button class="btn-sm green" onclick="confirmPayment('${p.id}')">✓ 确认</button>
+      <button class="btn-sm red"   onclick="rejectPayment('${p.id}')">✗ 拒绝</button>
+    </td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function renderUsers() {
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">用户列表（${usersData.length} 个）<input class="search-input" placeholder="搜索姓名或邮箱…" oninput="filterTable(this.value,'userTable')"></div>
+    <table id="userTable"><thead><tr><th>姓名</th><th>邮箱</th><th>订阅数</th><th>注册时间</th><th>最后登录</th><th>状态</th><th>操作</th></tr></thead><tbody>
+    ${usersData.filter(u=>!u.is_super_admin).map(u=>`<tr>
+      <td>${esc(u.name)}</td>
+      <td class="mono">${esc(u.email)}</td>
+      <td>${(u.subscriptions||[]).length}</td>
+      <td class="mono">${new Date(u.created_at).toLocaleDateString('zh-CN')}</td>
+      <td class="mono">${u.last_login_at?new Date(u.last_login_at).toLocaleDateString('zh-CN'):'—'}</td>
+      <td><span class="badge ${u.status==='active'?'badge-active':'badge-expired'}">${u.status==='active'?'正常':'已停用'}</span></td>
+      <td>${u.status==='active'
+        ? `<button class="btn-sm red" onclick="updateUserStatus('${u.id}','suspended')">停用</button>`
+        : `<button class="btn-sm green" onclick="updateUserStatus('${u.id}','active')">恢复</button>`}
+      </td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function renderSubs() {
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">订阅列表（${subsData.length} 条）<input class="search-input" placeholder="搜索用户或厂区…" oninput="filterTable(this.value,'subTable')"></div>
+    <table id="subTable"><thead><tr><th>用户</th><th>厂区</th><th>套餐</th><th>状态</th><th>WiFi 绑定</th><th>到期</th><th>操作</th></tr></thead><tbody>
+    ${subsData.map(s=>{
+      const expiry = s.status==='trial' ? new Date(s.trial_ends_at).toLocaleDateString('zh-CN')
+        : s.paid_ends_at ? new Date(s.paid_ends_at).toLocaleDateString('zh-CN') : '—';
+      const statusCls = s.status==='trial'?'badge-trial':s.status==='active'?'badge-active':'badge-expired';
+      return `<tr>
+        <td>${esc(s.user_name||'')}<br><span class="mono" style="font-size:10px">${esc(s.email||'')}</span></td>
+        <td>${esc(s.area_name)}</td>
+        <td>${s.plan==='trial'?'试用':s.plan==='monthly'?'月度':'年度'}</td>
+        <td><span class="badge ${statusCls}">${s.status}</span></td>
+        <td class="mono">${s.wifi_locked&&s.wifi_subnet?s.wifi_subnet+'.x':'未绑定'}</td>
+        <td class="mono">${expiry}</td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn-sm green" onclick="activateSub('${s.id}','monthly')">+月</button>
+          <button class="btn-sm green" onclick="activateSub('${s.id}','yearly')">+年</button>
+          ${s.wifi_locked?`<button class="btn-sm yellow" onclick="unbindIp('${s.id}')">解绑IP</button>`:''}
+          <button class="btn-sm red" onclick="cancelSub('${s.id}')">取消</button>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+function filterTable(q, tableId) {
+  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  q = q.toLowerCase();
+  rows.forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none');
+}
+
+async function confirmPayment(id) {
+  if (!confirm('确认此付款并激活订阅？')) return;
+  await api(`/api/admin/payments/${id}/confirm`, {method:'POST'});
+  await loadAll();
+}
+
+async function rejectPayment(id) {
+  const reason = prompt('拒绝原因：');
+  if (reason === null) return;
+  await api(`/api/admin/payments/${id}/reject`, {method:'POST', body:JSON.stringify({reason})});
+  await loadAll();
+}
+
+async function updateUserStatus(id, status) {
+  await api(`/api/admin/users/${id}/status`, {method:'POST', body:JSON.stringify({status})});
+  await loadAll();
+}
+
+async function activateSub(id, plan) {
+  if (!confirm(`为此订阅激活一个${plan==='monthly'?'月度':'年度'}套餐？`)) return;
+  await api(`/api/admin/subscriptions/${id}/activate`, {method:'POST', body:JSON.stringify({plan})});
+  await loadAll();
+}
+
+async function unbindIp(id) {
+  if (!confirm('解绑此订阅的 WiFi IP？用户下次使用时将重新绑定。')) return;
+  await api(`/api/admin/subscriptions/${id}/unbind-ip`, {method:'POST'});
+  await loadAll();
+}
+
+async function cancelSub(id) {
+  if (!confirm('取消此订阅？用户将无法继续使用。')) return;
+  await api(`/api/admin/subscriptions/${id}/cancel`, {method:'POST'});
+  await loadAll();
+}
+
+async function logout() {
+  await api('/api/auth/logout', {method:'POST'});
+  location.href='/login';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init().catch(console.error);
+</script>
+</body>
+</html>
