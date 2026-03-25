@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>账户管理 — 厂区管控</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070c18;--surface:#0d1525;--surface2:#111d30;--surface3:#172236;--border:#1c2d45;--border2:#243550;--accent:#38bdf8;--accent-dim:rgba(56,189,248,.1);--accent-glow:rgba(56,189,248,.3);--text:#c8d8ec;--text-dim:#4d6280;--text-muted:#2a3d56;--text-bright:#e8f0fc;--green:#34d399;--green-dim:rgba(52,211,153,.1);--yellow:#fbbf24;--yellow-dim:rgba(251,191,36,.1);--red:#f87171;--red-dim:rgba(248,113,113,.1);--purple:#a78bfa;--purple-dim:rgba(167,139,250,.1);--mono:'IBM Plex Mono',monospace;--sans:'Noto Sans SC',sans-serif;
+  --fs-xs:10px;--fs-sm:11px;--fs-md:13px;--fs-lg:15px;--fs-data:11px;--fs-tag:10px;
+  --visitor-row-content-h:auto;--visitor-row-h:auto;--visitor-card-expanded-h:auto;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
+
+/* header */
+.hdr{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:0 20px;flex-shrink:0;position:relative;z-index:10}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent-glow),transparent)}
+.hdr-logo{display:flex;align-items:center;gap:10px}
+.hdr-logo-icon{width:32px;height:32px;border:1.5px solid var(--accent);border-radius:6px;display:grid;place-items:center;background:var(--accent-dim);box-shadow:0 0 12px var(--accent-glow)}
+.hdr-logo-icon svg{width:16px;height:16px;fill:var(--accent)}
+.hdr-title{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-bright)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.hdr-user{font-size:12px;color:var(--text-dim)}
+.hdr-user strong{color:var(--text-bright)}
+.btn-logout{padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+.btn-nav{padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--accent);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.btn-nav:hover{border-color:var(--accent);background:var(--accent-dim);}
+
+/* layout */
+.account-layout{display:grid;grid-template-columns:280px minmax(0,1fr);flex:1;overflow:hidden;position:relative;z-index:2;min-height:0}
+
+/* sidebar */
+.account-sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.account-sidebar-head{padding:14px 16px;border-bottom:1px solid var(--border);font-family:var(--sans);font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between}
+.btn-add-sub{padding:4px 10px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--accent);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-add-sub:hover{border-color:var(--accent);background:var(--accent-dim)}
+.sub-list{flex:1;overflow-y:auto;padding:8px}
+.sub-list::-webkit-scrollbar{width:3px}
+.sub-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sub-card{padding:12px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:6px}
+.sub-card:hover{background:var(--surface2);border-color:var(--border2)}
+.sub-card.active{background:rgba(56,189,248,.04);border-color:var(--accent)}
+.sub-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sub-name{font-size:14px;font-weight:600;color:var(--text-bright)}
+.sub-badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600;border:1px solid transparent}
+.badge-trial{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--green)}
+.badge-active{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:var(--accent)}
+.badge-expired{background:var(--red-dim);border-color:rgba(248,113,113,.3);color:var(--red)}
+.sub-meta{font-size:11px;color:var(--text-dim);font-family:var(--mono)}
+.sub-wifi{font-size:10px;color:var(--text-dim);margin-top:3px;display:flex;align-items:center;gap:4px}
+.sub-wifi.bound{color:var(--green)}
+
+/* main */
+.account-main{overflow-y:auto;display:flex;flex-direction:column;background:transparent}
+.account-main::-webkit-scrollbar{width:4px}
+.account-main::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.account-main-inner{padding:20px 24px 32px;max-width:900px;margin:0 auto;width:100%}
+
+/* section */
+.section{margin-bottom:28px}
+.section-title{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text-bright);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* subscription detail */
+.sub-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.detail-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.detail-card .key{font-size:10px;color:var(--text-dim);font-family:var(--sans);font-weight:600;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.detail-card .val{font-family:var(--mono);font-size:14px;color:var(--text-bright)}
+.detail-card .val.large{font-size:22px;font-weight:700}
+.detail-card.trial-active .val.large{color:var(--green)}
+.detail-card.warn .val.large{color:var(--yellow)}
+.detail-card.expired .val.large{color:var(--red)}
+
+/* payment */
+.payment-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.plan-option{border:2px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;position:relative}
+.plan-option:hover{border-color:var(--accent);background:rgba(56,189,248,.03)}
+.plan-option.selected{border-color:var(--accent);background:var(--accent-dim)}
+.plan-option input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+.plan-name{font-size:13px;font-weight:700;color:var(--text-bright);margin-bottom:4px}
+.plan-price{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent)}
+.plan-desc{font-size:11px;color:var(--text-dim);margin-top:4px}
+.plan-save{display:inline-block;font-size:10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:var(--green);border-radius:4px;padding:2px 6px;margin-top:5px}
+.payment-info{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+.payment-info .pi-title{font-size:12px;font-weight:700;color:var(--text-bright);margin-bottom:12px}
+.pi-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.pi-row:last-child{border-bottom:none}
+.pi-key{font-size:12px;color:var(--text-dim)}
+.pi-val{font-family:var(--mono);font-size:12px;color:var(--text-bright);user-select:all}
+.field-group{margin-bottom:14px}
+.field-group label{display:block;font-size:11px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.field-group input,.field-group textarea{width:100%;padding:9px 12px;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;color:var(--text-bright);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s}
+.field-group input:focus,.field-group textarea:focus{border-color:var(--accent)}
+.field-group input::placeholder,.field-group textarea::placeholder{color:var(--text-dim)}
+.field-group textarea{resize:vertical;min-height:70px}
+.btn-submit{padding:10px 24px;background:var(--accent);color:#000;font-family:var(--sans);font-size:13px;font-weight:700;border:none;border-radius:8px;cursor:pointer;transition:all .15s}
+.btn-submit:hover{background:#7dd3fc;box-shadow:0 0 14px var(--accent-glow)}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed}
+
+/* wifi binding */
+.wifi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.wifi-status{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.wifi-dot{width:10px;height:10px;border-radius:50%;background:var(--text-dim)}
+.wifi-dot.bound{background:var(--green);box-shadow:0 0 8px rgba(52,211,153,.5)}
+.wifi-info{font-family:var(--mono);font-size:13px;color:var(--text-bright)}
+.wifi-desc{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:14px}
+.btn-bind{padding:9px 18px;background:transparent;border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .15s}
+.btn-bind:hover{background:var(--accent-dim)}
+.btn-unbind{padding:9px 18px;background:transparent;border:1px solid rgba(248,113,113,.4);border-radius:8px;color:var(--red);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .15s;margin-left:8px}
+.btn-unbind:hover{background:var(--red-dim)}
+.rebind-history{margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px}
+.rebind-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.rebind-item:last-child{border-bottom:none}
+.rebind-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rebind-subnet{font-family:var(--mono);font-size:12px;color:var(--text-bright)}
+.rebind-meta{margin-top:4px;font-size:11px;color:var(--text-dim);line-height:1.6}
+.badge-small{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid transparent}
+.badge-review{background:var(--yellow-dim);border-color:rgba(251,191,36,.35);color:var(--yellow)}
+.badge-ok{background:var(--green-dim);border-color:rgba(52,211,153,.35);color:var(--green)}
+.badge-no{background:var(--red-dim);border-color:rgba(248,113,113,.35);color:var(--red)}
+
+/* payment history */
+.pay-table{width:100%;border-collapse:collapse;font-size:12px}
+.pay-table th{padding:8px 12px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);background:var(--surface2)}
+.pay-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+.pay-table tr:last-child td{border-bottom:none}
+.status-pending{color:var(--yellow)}
+.status-confirmed{color:var(--green)}
+.status-rejected{color:var(--red)}
+
+/* empty */
+.empty{padding:40px 20px;text-align:center;color:var(--text-dim);font-size:13px}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.4}
+
+.alert{padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:16px}
+.alert-success{background:var(--green-dim);border:1px solid rgba(52,211,153,.3);color:var(--green)}
+.alert-error{background:var(--red-dim);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+.trial-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;background:linear-gradient(135deg,rgba(52,211,153,.07),rgba(56,189,248,.05));border:1px solid rgba(52,211,153,.25);border-radius:12px;margin-bottom:20px;flex-wrap:wrap}
+.trial-banner-title{font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px}
+.trial-banner-desc{font-size:13px;color:var(--text);line-height:1.6}
+.trial-banner-desc strong{color:var(--text-bright)}
+.btn-subscribe-now{padding:9px 20px;background:transparent;border:1px solid var(--green);border-radius:8px;color:var(--green);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.btn-subscribe-now:hover{background:var(--green-dim);box-shadow:0 0 12px rgba(52,211,153,.2)}
+
+/* ── 入场码面板 ── */
+.qr-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.qr-block{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0}
+.qr-img{width:200px;height:200px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);display:grid;place-items:center;overflow:hidden}
+.qr-img img{width:100%;height:100%;display:block;border-radius:10px}
+.qr-img-placeholder{color:var(--text-dim);font-size:13px;text-align:center;padding:20px}
+.qr-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase}
+.qr-info{flex:1;min-width:200px;display:flex;flex-direction:column;gap:14px}
+.qr-info-title{font-size:15px;font-weight:700;color:var(--text-bright)}
+.qr-info-desc{font-size:13px;color:var(--text-dim);line-height:1.7}
+.qr-steps{display:flex;flex-direction:column;gap:8px}
+.qr-step{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text)}
+.qr-step-num{width:20px;height:20px;border-radius:50%;background:var(--accent-dim);border:1px solid rgba(56,189,248,.3);color:var(--accent);font-family:var(--mono);font-size:10px;font-weight:700;display:grid;place-items:center;flex-shrink:0;margin-top:1px}
+.qr-url-box{display:flex;gap:8px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px}
+.qr-url-text{font-family:var(--mono);font-size:11px;color:var(--accent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:all}
+.btn-copy-url{padding:4px 10px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--text-dim);font-size:11px;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:var(--sans)}
+.btn-copy-url:hover{border-color:var(--accent);color:var(--accent)}
+.btn-refresh-qr{padding:7px 16px;border:1px solid var(--border2);border-radius:8px;background:transparent;color:var(--text-dim);font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--sans);margin-top:4px;align-self:flex-start}
+.btn-refresh-qr:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── 访客监控面板 ── */
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+    <span class="hdr-title">Factory Control</span>
+  </div>
+  <div class="hdr-right">
+    <button class="btn-nav" onclick="location.href='/dashboard'">← 返回管控台</button>
+    <span class="hdr-user">欢迎，<strong id="userName">…</strong></span>
+    <button class="btn-logout" onclick="logout()">退出登录</button>
+  </div>
+</header>
+
+<div class="account-layout">
+  <!-- 左：厂区列表 -->
+  <aside class="account-sidebar">
+    <div class="account-sidebar-head">
+      <span>我的厂区</span>
+      <button class="btn-add-sub" onclick="addSubscription()">+ 新增厂区</button>
+    </div>
+    <div class="sub-list" id="subList"><div class="empty"><div class="empty-icon">🏭</div>加载中…</div></div>
+  </aside>
+
+  <!-- 右：详情 -->
+  <main class="account-main">
+    <div class="account-main-inner" id="mainContent">
+      <div class="empty"><div class="empty-icon">👈</div><div>从左侧选择厂区查看详情</div></div>
+    </div>
+  </main>
+</div>
+
+<script>
+let subs = [], payInfo = {}, selectedSubId = null, orders = [];
+const rebindRequestsBySite = {};
+
+function readCookie(name) {
+  const key = `${name}=`;
+  const found = document.cookie.split(';').map(s => s.trim()).find(v => v.startsWith(key));
+  return found ? decodeURIComponent(found.slice(key.length)) : '';
+}
+
+async function api(url, opts={}) {
+  const method = String(opts.method || 'GET').toUpperCase();
+  const headers = { 'Content-Type':'application/json', ...(opts.headers || {}) };
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrf = readCookie('csrf_token');
+    if (csrf) headers['X-CSRF-Token'] = csrf;
+  }
+  const r = await fetch(url, { ...opts, method, headers, credentials: 'include' });
+  if (r.status === 401) { location.href='/login'; throw new Error('UNAUTH'); }
+  return r;
+}
+// 兼容 admin.html 的 visitor 函数调用方式
+const fetchWithAuth = api;
+
+async function init() {
+  const me = await api('/api/auth/me').then(r=>r.json());
+  document.getElementById('userName').textContent = me.name;
+
+  const [subsData, payInfoData, ordersData] = await Promise.all([
+    api('/api/user/subscriptions').then(r=>r.json()),
+    api('/api/user/payment-info').then(r=>r.json()),
+    api('/api/orders').then(r=>r.json()),
+  ]);
+
+  subs = subsData; payInfo = payInfoData; orders = ordersData;
+  renderSubList();
+  if (subs.length) selectSub(subs[0].id);
+}
+
+async function refreshSubscriptions() {
+  subs = await api('/api/user/subscriptions').then(r=>r.json());
+}
+
+async function loadRebindRequests(siteId, force = false) {
+  if (!siteId) return [];
+  if (!force && rebindRequestsBySite[siteId]) return rebindRequestsBySite[siteId];
+  const r = await api(`/api/sites/${siteId}/network-rebind-requests`);
+  const d = await r.json();
+  rebindRequestsBySite[siteId] = Array.isArray(d) ? d : [];
+  return rebindRequestsBySite[siteId];
+}
+
+function renderSubList() {
+  const el = document.getElementById('subList');
+  if (!subs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏭</div>暂无厂区，点击上方新增</div>'; return; }
+  el.innerHTML = subs.map(s => {
+    const badgeCls = s.status === 'trial' ? 'badge-trial' : s.status === 'active' ? 'badge-active' : 'badge-expired';
+    const badgeText = s.status === 'trial' ? `试用 ${s.remainingDays}天` : s.status === 'active' ? `有效 ${s.remainingDays}天` : '已过期';
+    const wifiBound = s.wifi_locked && s.wifi_subnet;
+    return `<div class="sub-card ${s.id===selectedSubId?'active':''}" onclick="selectSub('${s.id}')">
+      <div class="sub-card-top">
+        <span class="sub-name">${esc(s.area_name)}</span>
+        <span class="sub-badge ${badgeCls}">${badgeText}</span>
+      </div>
+      <div class="sub-meta">${s.plan==='trial'?'免费试用':s.plan==='monthly'?'月度订阅':'年度订阅'}</div>
+      <div class="sub-wifi ${wifiBound?'bound':''}">
+        ${wifiBound ? `🔒 绑定：${s.wifi_subnet}.x` : '⚪ WiFi 未绑定（首次使用自动绑定）'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 入场码 ────────────────────────────────────────────────
+const qrCache = {};
+
+async function loadQr(subId, forceRefresh = false) {
+  if (!forceRefresh && qrCache[subId]) {
+    applyQr(subId, qrCache[subId]);
+    return;
+  }
+  const wrap = document.getElementById('qrImgWrap-' + subId);
+  const urlEl = document.getElementById('qrUrl-' + subId);
+  if (wrap) wrap.innerHTML = '<div class="qr-img-placeholder">生成中…</div>';
+
+  try {
+    const sub = subs.find(s => s.id === subId);
+    const siteId = sub?.site_id || '';
+    if (!siteId) {
+      if (wrap) wrap.innerHTML = `<div class="qr-img-placeholder" style="color:var(--red)">缺少 siteId，无法生成</div>`;
+      return;
+    }
+    const r = await api(`/api/checkin-qr?siteId=${encodeURIComponent(siteId)}`);
+    if (!r.ok) {
+      const d = await r.json().catch(()=>({}));
+      if (wrap) wrap.innerHTML = `<div class="qr-img-placeholder" style="color:var(--red)">${d.message || '生成失败'}</div>`;
+      return;
+    }
+    const data = await r.json();
+    qrCache[subId] = data;
+    applyQr(subId, data);
+  } catch(e) {
+    if (wrap) wrap.innerHTML = `<div class="qr-img-placeholder" style="color:var(--red)">网络错误</div>`;
+  }
+}
+
+function applyQr(subId, data) {
+  const wrap  = document.getElementById('qrImgWrap-' + subId);
+  const urlEl = document.getElementById('qrUrl-' + subId);
+  if (wrap)  wrap.innerHTML  = `<img src="${data.qr}" alt="入场码">`;
+  if (urlEl) urlEl.textContent = data.url || '';
+}
+
+async function copyQrUrl(subId) {
+  const urlEl = document.getElementById('qrUrl-' + subId);
+  const url   = urlEl?.textContent?.trim();
+  if (!url || url === '生成中…') return;
+  try {
+    await navigator.clipboard.writeText(url);
+    const btn = urlEl.nextElementSibling;
+    if (btn) { btn.textContent = '已复制'; setTimeout(()=>{ btn.textContent = '复制'; }, 2000); }
+  } catch { alert('请长按链接手动复制：' + url); }
+}
+
+async function selectSub(id) {
+  selectedSubId = id;
+  renderSubList();
+  const sub = subs.find(s=>s.id===id);
+  if (!sub) return;
+  if (sub.site_id) {
+    try { await loadRebindRequests(sub.site_id); } catch {}
+  }
+  renderSubDetail(sub);
+  // 自动加载入场码（过期不加载）
+  if (sub.status !== 'expired') loadQr(id);
+}
+
+function renderSubDetail(sub) {
+  const expired      = sub.status === 'expired';
+  const isTrial      = sub.status === 'trial';
+  const isActive     = sub.status === 'active';
+  const trialDaysLeft = sub.remainingDays;
+  const mainEl = document.getElementById('mainContent');
+  const myPayments = orders.filter(p=>p.subscription_id===sub.id);
+
+  // ── 试用期横幅 ──────────────────────────────────────────
+  const trialBanner = isTrial ? `
+    <div class="trial-banner">
+      <div class="trial-banner-left">
+        <div class="trial-banner-title">🎉 免费试用中</div>
+        <div class="trial-banner-desc">您有 <strong>${trialDaysLeft} 天</strong>免费使用期，所有功能完全开放，无需付款。<br>试用结束后才需要订阅继续使用。</div>
+      </div>
+      <button class="btn-subscribe-now" onclick="showPaySection('${sub.id}')">提前订阅 →</button>
+    </div>` : '';
+
+  // ── 过期横幅 ─────────────────────────────────────────────
+  const expiredBanner = expired ? `
+    <div class="alert alert-error" style="margin-bottom:20px">
+      ⚠️ 试用期已结束，访客无法入场。请订阅后继续使用。
+      <button class="btn-subscribe-now" style="margin-left:16px;background:var(--red);color:#fff" onclick="showPaySection('${sub.id}')">立即订阅</button>
+    </div>` : '';
+
+  // ── 续费表单（默认隐藏，试用期内折叠）────────────────────
+  const paySection = `
+  <div class="section" id="paySection-${sub.id}" style="${isTrial ? 'display:none' : ''}">
+    <div class="section-title">${isActive ? '续费订阅' : '订阅套餐'}</div>
+    <div class="payment-card">
+      <div class="plan-grid">
+        <label class="plan-option selected" id="plan-monthly" onclick="selectPlan('monthly','${sub.id}')">
+          <input type="radio" name="plan" value="monthly" checked>
+          <div class="plan-name">月度订阅</div>
+          <div class="plan-price">¥${(payInfo.prices?.monthlyYuan)||'99'}</div>
+          <div class="plan-desc">按月付费，灵活续费</div>
+        </label>
+        <label class="plan-option" id="plan-yearly" onclick="selectPlan('yearly','${sub.id}')">
+          <input type="radio" name="plan" value="yearly">
+          <div class="plan-name">年度订阅</div>
+          <div class="plan-price">¥${(payInfo.prices?.yearlyYuan)||'999'}</div>
+          <div class="plan-desc">一次付费，全年有效</div>
+          <div class="plan-save">省 ¥${Math.round((payInfo.prices?.monthlyYuan||99)*12 - (payInfo.prices?.yearlyYuan||999))} 元</div>
+        </label>
+      </div>
+      <div class="payment-info">
+        <div class="pi-title">转账收款信息（转账后填写流水号提交）</div>
+        ${payInfo.alipay     ? `<div class="pi-row"><span class="pi-key">支付宝</span><span class="pi-val">${esc(payInfo.alipay)}</span></div>` : ''}
+        ${payInfo.wechat     ? `<div class="pi-row"><span class="pi-key">微信号</span><span class="pi-val">${esc(payInfo.wechat)}</span></div>` : ''}
+        ${payInfo.bankName   ? `<div class="pi-row"><span class="pi-key">银行</span><span class="pi-val">${esc(payInfo.bankName)}</span></div>` : ''}
+        ${payInfo.bankAccount? `<div class="pi-row"><span class="pi-key">账号</span><span class="pi-val">${esc(payInfo.bankAccount)}</span></div>` : ''}
+        ${payInfo.bankHolder ? `<div class="pi-row"><span class="pi-key">户名</span><span class="pi-val">${esc(payInfo.bankHolder)}</span></div>` : ''}
+      </div>
+      <div class="field-group">
+        <label>转账流水号（必填）</label>
+        <input type="text" id="txnId-${sub.id}" placeholder="请填写支付宝/微信/银行转账流水号">
+      </div>
+      <div class="field-group">
+        <label>备注（选填）</label>
+        <textarea id="payNotes-${sub.id}" placeholder="如截图无法上传，可在此补充说明"></textarea>
+      </div>
+      <button class="btn-submit" onclick="submitPayment('${sub.id}')">提交付款申请</button>
+      <div id="payMsg-${sub.id}" style="margin-top:12px"></div>
+    </div>
+  </div>`;
+
+  mainEl.innerHTML = `
+  <div class="tab-panel active" id="tab-manage">
+  ${trialBanner}
+  ${expiredBanner}
+
+  <div class="section">
+    <div class="section-title">入场码</div>
+    <div class="qr-panel">
+      <div class="qr-block">
+        <div class="qr-img" id="qrImgWrap-${sub.id}">
+          <div class="qr-img-placeholder">加载中…</div>
+        </div>
+        <div class="qr-label">访客扫码入场</div>
+        <button class="btn-refresh-qr" onclick="loadQr('${sub.id}',true)">🔄 刷新二维码</button>
+      </div>
+      <div class="qr-info">
+        <div class="qr-info-title">让访客扫描此二维码入场</div>
+        <div class="qr-info-desc">访客用手机扫描后，填写姓名即可完成入场登记，系统自动下发管控。</div>
+        <div class="qr-steps">
+          <div class="qr-step"><div class="qr-step-num">1</div><span>访客打开手机微信/相机扫描上方二维码</span></div>
+          <div class="qr-step"><div class="qr-step-num">2</div><span>填写来访姓名（公司选填），点击「开始登记」</span></div>
+          <div class="qr-step"><div class="qr-step-num">3</div><span>按提示安装并打开「厂区管控」APP</span></div>
+          <div class="qr-step"><div class="qr-step-num">4</div><span>APP 内扫描 ADB 配对码，管控自动生效</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">或将以下链接发给访客（同一 WiFi 下）</div>
+          <div class="qr-url-box">
+            <span class="qr-url-text" id="qrUrl-${sub.id}">生成中…</span>
+            <button class="btn-copy-url" onclick="copyQrUrl('${sub.id}')">复制</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">厂区信息 — ${esc(sub.area_name)}</div>
+    <div class="sub-detail-grid">
+      <div class="detail-card ${trialDaysLeft <= 3 ? 'warn' : expired ? 'expired' : 'trial-active'}">
+        <div class="key">使用状态</div>
+        <div class="val large">${isTrial ? `试用剩 ${trialDaysLeft} 天` : isActive ? `订阅剩 ${trialDaysLeft} 天` : '已过期'}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${isTrial ? '试用期内所有功能免费开放' : isActive ? (sub.plan==='monthly'?'月度订阅中':'年度订阅中') : '请续费恢复使用'}</div>
+      </div>
+      <div class="detail-card">
+        <div class="key">WiFi 绑定</div>
+        <div class="val">${sub.wifi_locked&&sub.wifi_subnet ? sub.wifi_subnet+'.x' : '未绑定'}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${sub.wifi_locked?'首次使用已自动绑定':'首次访客入场时自动绑定'}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">WiFi IP 绑定管理</div>
+    <div class="wifi-card">
+      <div class="wifi-status">
+        <div class="wifi-dot ${sub.wifi_locked?'bound':''}"></div>
+        <div class="wifi-info">${sub.wifi_locked&&sub.wifi_subnet ? `已绑定到 ${sub.wifi_subnet}.x 网络` : '尚未绑定'}</div>
+      </div>
+      <div class="wifi-desc">绑定后，只有来自该 WiFi 网段的访客才能使用此订阅入场，防止同一账户在多个厂区使用。<br>若网络变更，请提交重绑申请等待管理员审批。</div>
+      ${!sub.wifi_locked ? `<button class="btn-bind" onclick="bindIp('${sub.id}')">📍 绑定当前 WiFi</button>` : `<button class="btn-bind" onclick="submitRebindRequest('${sub.id}')">📝 提交重绑申请</button>`}
+      <div class="rebind-history">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">网络重绑申请记录</div>
+        ${renderRebindHistory(sub)}
+      </div>
+    </div>
+  </div>
+
+  ${paySection}
+
+  ${myPayments.length ? `<div class="section"><div class="section-title">支付记录</div>${renderPaymentTable(myPayments)}</div>` : ''}
+  </div><!-- /tab-manage -->
+  `;
+}
+
+function renderRebindHistory(sub) {
+  const siteId = sub.site_id;
+  const rows = siteId ? (rebindRequestsBySite[siteId] || []) : [];
+  if (!siteId) return `<div style="font-size:12px;color:var(--text-dim)">当前订阅暂无 site_id，暂不支持重绑申请。</div>`;
+  if (!rows.length) return `<div style="font-size:12px;color:var(--text-dim)">暂无申请记录</div>`;
+  const statusLabel = { pending_review: '待审核', approved: '已通过', rejected: '已拒绝', cancelled: '已取消' };
+  const statusCls = { pending_review: 'badge-review', approved: 'badge-ok', rejected: 'badge-no', cancelled: 'badge-no' };
+  return rows.map(r => `
+    <div class="rebind-item">
+      <div class="rebind-top">
+        <span class="rebind-subnet">${esc(r.candidate_subnet)}</span>
+        <span class="badge-small ${statusCls[r.status] || 'badge-review'}">${statusLabel[r.status] || r.status}</span>
+      </div>
+      <div class="rebind-meta">
+        申请时间：${new Date(r.created_at).toLocaleString('zh-CN')}<br>
+        原因：${esc(r.reason || '—')}${r.review_note ? `<br>审核备注：${esc(r.review_note)}` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function showPaySection(subId) {
+  const el = document.getElementById('paySection-' + subId);
+  if (el) { el.style.display = ''; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
+function renderPaymentTable(list) {
+  if (!list.length) return '<div class="empty"><div class="empty-icon">💳</div>暂无支付记录</div>';
+  const statusText = {
+    pending_payment: '待支付',
+    paid_pending_review: '审核中',
+    confirmed: '已确认',
+    rejected: '已拒绝',
+    cancelled: '已取消',
+    expired: '已过期',
+  };
+  const statusCls  = {
+    pending_payment: 'status-pending',
+    paid_pending_review: 'status-pending',
+    confirmed: 'status-confirmed',
+    rejected: 'status-rejected',
+  };
+  return `<table class="pay-table"><thead><tr><th>套餐</th><th>金额</th><th>流水号</th><th>提交时间</th><th>状态</th></tr></thead><tbody>
+    ${list.map(p=>`<tr>
+      <td>${(p.plan_code || p.plan)==='monthly'?'月度':'年度'}</td>
+      <td>¥${(p.amount_fen/100).toFixed(2)}</td>
+      <td style="font-family:var(--mono);font-size:11px">${esc(p.txn_id||'—')}</td>
+      <td style="font-family:var(--mono);font-size:11px">${new Date(p.created_at).toLocaleDateString('zh-CN')}</td>
+      <td class="${statusCls[p.status]||''}">${statusText[p.status]||p.status}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+let selectedPlan = 'monthly';
+function selectPlan(plan, subId) {
+  selectedPlan = plan;
+  document.getElementById('plan-monthly').classList.toggle('selected', plan==='monthly');
+  document.getElementById('plan-yearly').classList.toggle('selected', plan==='yearly');
+}
+
+async function submitPayment(subId) {
+  const txnId  = document.getElementById(`txnId-${subId}`).value.trim();
+  const notes  = document.getElementById(`payNotes-${subId}`).value.trim();
+  const msgEl  = document.getElementById(`payMsg-${subId}`);
+  if (!txnId) { msgEl.innerHTML='<div class="alert alert-error">请填写转账流水号</div>'; return; }
+
+  try {
+    const sub = subs.find(s => s.id === subId);
+    if (!sub || !sub.site_id) {
+      msgEl.innerHTML='<div class="alert alert-error">当前厂区缺少 siteId，无法创建订单</div>';
+      return;
+    }
+    const createRes = await api('/api/orders', {
+      method:'POST',
+      body: JSON.stringify({ siteId: sub.site_id, planCode: selectedPlan }),
+    });
+    const createBody = await createRes.json();
+    if (!createRes.ok || !createBody?.order?.id) {
+      msgEl.innerHTML=`<div class="alert alert-error">${createBody.message||createBody.error||'创建订单失败'}</div>`;
+      return;
+    }
+    const payRes = await api(`/api/orders/${createBody.order.id}/pay`, {
+      method:'POST',
+      body: JSON.stringify({ txnId, note: notes }),
+    });
+    const payBody = await payRes.json();
+    if (!payRes.ok) {
+      msgEl.innerHTML=`<div class="alert alert-error">${payBody.message||payBody.error||'提交失败'}</div>`;
+      return;
+    }
+    msgEl.innerHTML='<div class="alert alert-success">✅ 付款申请已提交，管理员审核后将激活订阅（通常 1 个工作日内）</div>';
+    orders = await api('/api/orders').then(r=>r.json());
+    setTimeout(()=>{ const sub=subs.find(s=>s.id===subId); if(sub) renderSubDetail(sub); }, 1500);
+  } catch(e) { msgEl.innerHTML=`<div class="alert alert-error">网络错误：${e.message}</div>`; }
+}
+
+async function bindIp(subId) {
+  if (!confirm('将当前网络 IP 绑定到此订阅？绑定后只有该 WiFi 网段的访客才能使用此厂区。')) return;
+  try {
+    const r = await api(`/api/user/subscriptions/${subId}/bind-ip`, { method:'POST' });
+    const d = await r.json();
+    if (!r.ok) { alert(d.message||'绑定失败'); return; }
+    await refreshSubscriptions();
+    renderSubList();
+    const sub = subs.find(s=>s.id===subId);
+    if (sub) renderSubDetail(sub);
+  } catch(e) { alert('网络错误'); }
+}
+
+async function submitRebindRequest(subId) {
+  const sub = subs.find(s => s.id === subId);
+  if (!sub || !sub.site_id) { alert('当前厂区标识缺失，无法提交重绑申请'); return; }
+  const subnet = prompt('请输入新网络子网（例如 192.168.10），留空则自动识别当前网络：', '');
+  if (subnet === null) return;
+  const reason = prompt('请输入重绑原因（可选）：', '') || '';
+  try {
+    const payload = { reason };
+    if (subnet.trim()) payload.candidateSubnet = subnet.trim();
+    const r = await api(`/api/sites/${sub.site_id}/network-rebind-requests`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (!r.ok) { alert(d.message || d.error || '提交失败'); return; }
+    await loadRebindRequests(sub.site_id, true);
+    const latest = subs.find(s => s.id === subId);
+    if (latest) renderSubDetail(latest);
+    alert('已提交重绑申请，等待管理员审核。');
+  } catch (e) {
+    alert('网络错误，提交失败');
+  }
+}
+
+async function addSubscription() {
+  const name = prompt('请输入新厂区名称：');
+  if (!name?.trim()) return;
+  await api('/api/user/subscriptions', { method:'POST', body:JSON.stringify({ areaName: name.trim() }) });
+  await refreshSubscriptions();
+  renderSubList();
+}
+
+async function logout() {
+  await api('/api/auth/logout', { method:'POST' });
+  location.href = '/login';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init().catch(console.error);
+
+</script>
+</body>
+</html>

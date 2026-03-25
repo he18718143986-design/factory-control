@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>超管后台 — 厂区管控 SaaS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070c18;--surface:#0d1525;--surface2:#111d30;--surface3:#172236;--border:#1c2d45;--border2:#243550;--accent:#38bdf8;--accent-dim:rgba(56,189,248,.1);--accent-glow:rgba(56,189,248,.3);--text:#c8d8ec;--text-dim:#4d6280;--text-bright:#e8f0fc;--green:#34d399;--green-dim:rgba(52,211,153,.1);--yellow:#fbbf24;--red:#f87171;--red-dim:rgba(248,113,113,.1);--purple:#a78bfa;--mono:'IBM Plex Mono',monospace;--sans:'Noto Sans SC',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
+.hdr{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 20px;flex-shrink:0;position:relative;z-index:10}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent-glow),transparent)}
+.hdr-title{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-bright)}
+.hdr-badge{font-size:10px;padding:2px 8px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:3px;color:var(--purple);font-family:var(--mono)}
+.hdr-right{margin-left:auto;display:flex;gap:10px}
+.tab-nav{display:flex;gap:2px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:9}
+.tab{padding:10px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-dim);transition:all .15s;font-family:var(--sans);font-weight:500}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-family:var(--mono);margin-left:6px;padding:0 5px}
+.content{flex:1;overflow-y:auto;padding:20px 24px 32px;position:relative;z-index:2;min-height:0}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text-bright);line-height:1.1;margin-bottom:4px}
+.stat-label{font-size:11px;color:var(--text-dim)}
+.stat-card.accent .stat-val{color:var(--accent)}
+.stat-card.green  .stat-val{color:var(--green)}
+.stat-card.yellow .stat-val{color:var(--yellow)}
+.stat-card.red    .stat-val{color:var(--red)}
+
+/* table */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.tbl-head{padding:10px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 14px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(56,189,248,.02)}
+.mono{font-family:var(--mono);font-size:11px}
+.badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.badge-trial{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--green)}
+.badge-active{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:var(--accent)}
+.badge-expired{background:var(--red-dim);border-color:rgba(248,113,113,.3);color:var(--red)}
+.badge-grace{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--yellow)}
+.badge-suspended{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.35);color:var(--purple)}
+.badge-cancelled{background:var(--red-dim);border-color:rgba(248,113,113,.3);color:var(--red)}
+.badge-pending{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--yellow)}
+.badge-confirmed{background:var(--green-dim);border-color:rgba(52,211,153,.3);color:var(--green)}
+.badge-rejected{background:var(--red-dim);border-color:rgba(248,113,113,.3);color:var(--red)}
+.badge-approved{background:var(--green-dim);border-color:rgba(52,211,153,.3);color:var(--green)}
+.btn-sm{padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm.green:hover{border-color:var(--green);color:var(--green)}
+.btn-sm.red:hover{border-color:var(--red);color:var(--red)}
+.btn-sm.yellow:hover{border-color:var(--yellow);color:var(--yellow)}
+.search-input{height:32px;padding:0 12px;background:var(--surface3);border:1px solid var(--border2);border-radius:7px;color:var(--text-bright);font-family:var(--sans);font-size:12px;outline:none;width:220px;transition:border-color .15s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--text-dim)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.toolbar .search-input{width:180px}
+.toolbar-note{font-size:11px;color:var(--text-dim);margin-left:auto}
+.payload-box{max-width:360px;white-space:pre-wrap;word-break:break-word;color:var(--text-dim);font-size:11px;line-height:1.5}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 12px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.chip{padding:5px 10px;border:1px solid var(--border2);border-radius:999px;background:transparent;color:var(--text-dim);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s}
+.chip:hover{color:var(--accent);border-color:var(--accent)}
+.chip.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+.filter-summary{padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(56,189,248,.04);font-size:11px;color:var(--text-dim);display:flex;flex-wrap:wrap;gap:8px}
+.filter-tag{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);color:var(--text)}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <span class="hdr-title">Factory Control SaaS</span>
+  <span class="hdr-badge">超管后台</span>
+  <div class="hdr-right">
+    <button class="btn-sm" onclick="location.href='/dashboard'">用户控制台</button>
+    <button class="btn-sm red" onclick="logout()">退出</button>
+  </div>
+</header>
+
+<div class="tab-nav">
+  <div class="tab active" onclick="showTab('overview')">概览</div>
+  <div class="tab" onclick="showTab('payments')">待审核订单<span class="tab-badge" id="pendingCount">0</span></div>
+  <div class="tab" onclick="showTab('rebinds')">网络重绑审批<span class="tab-badge" id="pendingRebindCount">0</span></div>
+  <div class="tab" onclick="showTab('users')">用户管理</div>
+  <div class="tab" onclick="showTab('subscriptions')">订阅管理</div>
+  <div class="tab" onclick="showTab('audits')">审计日志</div>
+</div>
+
+<div class="content" id="mainContent"></div>
+
+<script>
+let currentTab = 'overview';
+let statsData={}, usersData=[], subsData=[], pendingOrders=[], pendingRebinds=[];
+let rebindFilters = { q: '', highRiskOnly: false };
+let auditData = { items: [], total: 0, limit: 50, offset: 0, hasMore: false };
+let auditFilters = { q: '', action: '', siteId: '', actorUserId: '', limit: 50, offset: 0 };
+const AUDIT_ACTION_PRESETS = ['AUTH_LOGIN_SUCCESS','AUTH_LOGIN_FAILED','ORDER_CREATED','ORDER_PAYMENT_SUBMITTED','ORDER_CONFIRMED','ORDER_REJECTED','NETWORK_REBIND_APPROVED','NETWORK_REBIND_REJECTED','SUBSCRIPTION_ACTIVATED','SUBSCRIPTION_CANCELLED','SUBSCRIPTION_SUSPENDED','SUBSCRIPTION_RESUMED'];
+
+function readCookie(name) {
+  const key = `${name}=`;
+  const found = document.cookie.split(';').map(s => s.trim()).find(v => v.startsWith(key));
+  return found ? decodeURIComponent(found.slice(key.length)) : '';
+}
+
+async function adminApi(url, opts={}) {
+  const method = String(opts.method || 'GET').toUpperCase();
+  const headers = { 'Content-Type':'application/json', ...(opts.headers || {}) };
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrf = readCookie('csrf_token');
+    if (csrf) headers['X-CSRF-Token'] = csrf;
+  }
+  const r = await fetch(url, { ...opts, method, headers, credentials: 'include' });
+  if (r.status === 401) { location.href='/login'; throw new Error('UNAUTH'); }
+  return r;
+}
+
+async function init() {
+  await loadAll();
+  showTab('overview');
+  setInterval(loadAll, 30000);
+}
+
+async function loadAll() {
+  const [s, p, rb, u, sub] = await Promise.all([
+    adminApi('/api/admin/stats').then(r=>r.json()),
+    adminApi('/api/admin/orders?status=paid_pending_review').then(r=>r.json()),
+    adminApi('/api/admin/network-rebind-requests?status=pending_review').then(r=>r.json()),
+    adminApi('/api/admin/users').then(r=>r.json()),
+    adminApi('/api/admin/subscriptions').then(r=>r.json()),
+  ]);
+  statsData=s; pendingOrders=p; pendingRebinds=rb; usersData=u; subsData=sub;
+  document.getElementById('pendingCount').textContent = p.length;
+  document.getElementById('pendingRebindCount').textContent = rb.length;
+  if (currentTab === 'audits') await loadAuditLogs();
+  if (currentTab) renderTab(currentTab);
+}
+
+async function showTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['overview','payments','rebinds','users','subscriptions','audits'][i]===tab));
+  if (tab === 'audits') await loadAuditLogs();
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  const el = document.getElementById('mainContent');
+  if (tab==='overview')      el.innerHTML = renderOverview();
+  else if (tab==='payments') el.innerHTML = renderPayments();
+  else if (tab==='rebinds')  el.innerHTML = renderRebinds();
+  else if (tab==='users')    el.innerHTML = renderUsers();
+  else if (tab==='subscriptions') el.innerHTML = renderSubs();
+  else if (tab==='audits')   el.innerHTML = renderAudits();
+}
+
+function renderOverview() {
+  const s = statsData;
+  const yr = (s.totalRevenueFen||0)/100;
+  const mr = (s.monthlyRevenueFen||0)/100;
+  return `
+  <div class="stats-row">
+    <div class="stat-card accent"><div class="stat-val">${s.totalUsers||0}</div><div class="stat-label">注册用户</div></div>
+    <div class="stat-card green"><div class="stat-val">${s.activeSubsCnt||0}</div><div class="stat-label">有效订阅</div></div>
+    <div class="stat-card yellow"><div class="stat-val">${s.pendingPayCnt||0}</div><div class="stat-label">待审核订单</div></div>
+    <div class="stat-card"><div class="stat-val">¥${mr.toFixed(0)}</div><div class="stat-label">近30天收入</div></div>
+    <div class="stat-card green"><div class="stat-val">¥${yr.toFixed(0)}</div><div class="stat-label">累计收入</div></div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-head">待审核订单 ${pendingOrders.length ? `<span class="badge badge-pending">${pendingOrders.length} 条</span>` : ''}</div>
+    ${renderOrderRows(pendingOrders.slice(0,5))}
+  </div>`;
+}
+
+function renderPayments() {
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">待审核订单（${pendingOrders.length} 条）</div>
+    ${renderOrderRows(pendingOrders)}
+  </div>`;
+}
+
+function renderRebinds() {
+  const rows = getFilteredRebinds();
+  if (!rows.length) {
+    return `<div class="tbl-wrap">
+      <div class="tbl-head">网络重绑待审核（${pendingRebinds.length} 条）</div>
+      <div class="toolbar">
+        <input class="search-input" placeholder="搜索厂区/申请人/子网/备注" value="${esc(rebindFilters.q)}" oninput="updateRebindQuery(this.value)">
+        <button class="btn-sm ${rebindFilters.highRiskOnly ? 'yellow' : ''}" onclick="toggleHighRiskOnly()">${rebindFilters.highRiskOnly ? '仅高风险: 开' : '仅高风险: 关'}</button>
+      </div>
+      <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">当前筛选条件下暂无待审核重绑申请</div>
+    </div>`;
+  }
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">网络重绑待审核（${pendingRebinds.length} 条，筛选后 ${rows.length} 条）</div>
+    <div class="toolbar">
+      <input class="search-input" placeholder="搜索厂区/申请人/子网/备注" value="${esc(rebindFilters.q)}" oninput="updateRebindQuery(this.value)">
+      <button class="btn-sm ${rebindFilters.highRiskOnly ? 'yellow' : ''}" onclick="toggleHighRiskOnly()">${rebindFilters.highRiskOnly ? '仅高风险: 开' : '仅高风险: 关'}</button>
+      <span class="toolbar-note">支持高风险筛选与强制审批确认</span>
+    </div>
+    <table><thead><tr><th>厂区</th><th>申请人</th><th>账号</th><th>候选网络</th><th>风险</th><th>证据/原因</th><th>申请时间</th><th>操作</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr>
+        <td>${esc(r.site_name||'—')}</td>
+        <td>${esc(r.requested_by_email||'—')}</td>
+        <td class="mono">${esc(r.owner_email||'—')}</td>
+        <td class="mono">${esc(renderRebindNetworkSummary(r))}</td>
+        <td><span class="badge ${(r.is_high_risk || Number(r.risk_score||0) >= 70) ? 'badge-rejected' : 'badge-pending'}">risk ${Number(r.risk_score||0)}</span></td>
+        <td>${esc(r.evidence || r.reason || '—')}</td>
+        <td class="mono">${new Date(r.created_at).toLocaleString('zh-CN')}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn-sm green" onclick="approveRebind('${r.id}')">✓ 通过</button>
+          <button class="btn-sm red" onclick="rejectRebind('${r.id}')">✗ 拒绝</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>
+  </div>`;
+}
+
+function renderRebindNetworkSummary(row) {
+  const fp = row.candidate_fingerprint || {};
+  const subnet = fp.lanSubnet || row.candidate_subnet || '—';
+  const bssid = fp.bssid || 'n/a';
+  const gw = fp.gatewayIp || row.candidate_ip || 'n/a';
+  return `${subnet} | bssid:${bssid} | gw:${gw}`;
+}
+
+function getFilteredRebinds() {
+  const q = String(rebindFilters.q || '').trim().toLowerCase();
+  return pendingRebinds.filter(item => {
+    const isHighRisk = !!item.is_high_risk || Number(item.risk_score || 0) >= 70;
+    if (rebindFilters.highRiskOnly && !isHighRisk) return false;
+    if (!q) return true;
+    const text = [
+      item.site_name,
+      item.requested_by_email,
+      item.owner_email,
+      item.candidate_subnet,
+      item.candidate_ip,
+      item.evidence,
+      item.reason,
+    ].map(v => String(v || '').toLowerCase()).join(' ');
+    return text.includes(q);
+  });
+}
+
+function updateRebindQuery(v) {
+  rebindFilters.q = String(v || '');
+  renderTab('rebinds');
+}
+
+function toggleHighRiskOnly() {
+  rebindFilters.highRiskOnly = !rebindFilters.highRiskOnly;
+  renderTab('rebinds');
+}
+
+function renderOrderRows(list) {
+  if (!list.length) return '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">暂无待审核订单</div>';
+  return `<table><thead><tr><th>用户</th><th>邮箱</th><th>厂区</th><th>套餐</th><th>金额</th><th>流水号</th><th>提交时间</th><th>操作</th></tr></thead><tbody>
+  ${list.map(o=>`<tr>
+    <td>${esc(o.user_name)}</td>
+    <td class="mono">${esc(o.email)}</td>
+    <td>${esc(o.site_name || o.area_name || '—')}</td>
+    <td><span class="badge badge-trial">${o.plan_code==='monthly'?'月度':'年度'}</span></td>
+    <td class="mono">¥${(o.amount_fen/100).toFixed(2)}</td>
+    <td class="mono">${esc(o.txn_id||'—')}</td>
+    <td class="mono">${new Date(o.created_at).toLocaleDateString('zh-CN')}</td>
+    <td style="display:flex;gap:6px">
+      <button class="btn-sm green" onclick="confirmOrder('${o.id}')">✓ 确认</button>
+      <button class="btn-sm red"   onclick="rejectOrder('${o.id}')">✗ 拒绝</button>
+    </td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function renderUsers() {
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">用户列表（${usersData.length} 个）<input class="search-input" placeholder="搜索姓名或邮箱…" oninput="filterTable(this.value,'userTable')"></div>
+    <table id="userTable"><thead><tr><th>姓名</th><th>邮箱</th><th>订阅数</th><th>注册时间</th><th>最后登录</th><th>状态</th><th>操作</th></tr></thead><tbody>
+    ${usersData.filter(u=>!u.is_super_admin).map(u=>`<tr>
+      <td>${esc(u.name)}</td>
+      <td class="mono">${esc(u.email)}</td>
+      <td>${(u.subscriptions||[]).length}</td>
+      <td class="mono">${new Date(u.created_at).toLocaleDateString('zh-CN')}</td>
+      <td class="mono">${u.last_login_at?new Date(u.last_login_at).toLocaleDateString('zh-CN'):'—'}</td>
+      <td><span class="badge ${u.status==='active'?'badge-active':'badge-expired'}">${u.status==='active'?'正常':'已停用'}</span></td>
+      <td>${u.status==='active'
+        ? `<button class="btn-sm red" onclick="updateUserStatus('${u.id}','suspended')">停用</button>`
+        : `<button class="btn-sm green" onclick="updateUserStatus('${u.id}','active')">恢复</button>`}
+      </td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function renderSubs() {
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">订阅列表（${subsData.length} 条）<input class="search-input" placeholder="搜索用户或厂区…" oninput="filterTable(this.value,'subTable')"></div>
+    <table id="subTable"><thead><tr><th>用户</th><th>厂区</th><th>套餐</th><th>状态</th><th>WiFi 绑定</th><th>到期</th><th>操作</th></tr></thead><tbody>
+    ${subsData.map(s=>{
+      const expiry = s.status==='trial'
+        ? new Date(s.trial_ends_at).toLocaleDateString('zh-CN')
+        : s.status==='grace' && s.grace_ends_at
+          ? new Date(s.grace_ends_at).toLocaleDateString('zh-CN')
+          : s.paid_ends_at ? new Date(s.paid_ends_at).toLocaleDateString('zh-CN') : '—';
+      const statusCls = s.status==='trial'
+        ? 'badge-trial'
+        : s.status==='active'
+          ? 'badge-active'
+          : s.status==='grace'
+            ? 'badge-grace'
+            : s.status==='suspended'
+              ? 'badge-suspended'
+              : s.status==='cancelled'
+                ? 'badge-cancelled'
+                : 'badge-expired';
+      return `<tr>
+        <td>${esc(s.user_name||'')}<br><span class="mono" style="font-size:10px">${esc(s.email||'')}</span></td>
+        <td>${esc(s.area_name)}</td>
+        <td>${s.plan==='trial'?'试用':s.plan==='monthly'?'月度':'年度'}</td>
+        <td><span class="badge ${statusCls}">${s.status}</span></td>
+        <td class="mono">${s.wifi_locked&&s.wifi_subnet?s.wifi_subnet+'.x':'未绑定'}</td>
+        <td class="mono">${expiry}</td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn-sm green" onclick="activateSub('${s.id}','monthly')">+月</button>
+          <button class="btn-sm green" onclick="activateSub('${s.id}','yearly')">+年</button>
+          ${s.status !== 'cancelled' && s.status !== 'suspended'
+            ? `<button class="btn-sm yellow" onclick="suspendSub('${s.id}')">暂停</button>`
+            : ''}
+          ${s.status === 'suspended'
+            ? `<button class="btn-sm green" onclick="resumeSub('${s.id}')">恢复</button>`
+            : ''}
+          ${s.wifi_locked?`<button class="btn-sm yellow" onclick="unbindIp('${s.id}')">解绑IP</button>`:''}
+          <button class="btn-sm red" onclick="cancelSub('${s.id}')">取消</button>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+async function loadAuditLogs() {
+  const params = new URLSearchParams();
+  if (auditFilters.q) params.set('q', auditFilters.q);
+  if (auditFilters.action) params.set('action', auditFilters.action);
+  if (auditFilters.siteId) params.set('siteId', auditFilters.siteId);
+  if (auditFilters.actorUserId) params.set('actorUserId', auditFilters.actorUserId);
+  params.set('limit', String(auditFilters.limit || 50));
+  params.set('offset', String(auditFilters.offset || 0));
+  auditData = await adminApi(`/api/admin/audit-logs?${params.toString()}`).then(r=>r.json());
+}
+
+function getAuditFilterSummary() {
+  const summary = [];
+  if (auditFilters.q) summary.push(`关键词: ${auditFilters.q}`);
+  if (auditFilters.action) summary.push(`Action: ${auditFilters.action}`);
+  if (auditFilters.siteId) summary.push(`Site: ${auditFilters.siteId}`);
+  if (auditFilters.actorUserId) summary.push(`Actor: ${auditFilters.actorUserId}`);
+  return summary;
+}
+
+function renderAudits() {
+  const items = auditData.items || [];
+  const summary = getAuditFilterSummary();
+  return `<div class="tbl-wrap">
+    <div class="tbl-head">审计日志（${auditData.total || 0} 条）</div>
+    <div class="toolbar">
+      <input id="auditQ" class="search-input" placeholder="搜索 action / 用户 / 厂区 / payload" value="${esc(auditFilters.q)}" onkeydown="onAuditFilterKeydown(event)">
+      <input id="auditAction" class="search-input" placeholder="按 action 精确筛选" value="${esc(auditFilters.action)}" onkeydown="onAuditFilterKeydown(event)">
+      <input id="auditSiteId" class="search-input mono" placeholder="按 siteId 筛选" value="${esc(auditFilters.siteId)}" onkeydown="onAuditFilterKeydown(event)">
+      <input id="auditActorUserId" class="search-input mono" placeholder="按 actorUserId 筛选" value="${esc(auditFilters.actorUserId)}" onkeydown="onAuditFilterKeydown(event)">
+      <button class="btn-sm green" onclick="applyAuditFilters()">查询</button>
+      <button class="btn-sm" onclick="resetAuditFilters()">重置</button>
+      <button class="btn-sm" onclick="prevAuditPage()" ${auditData.offset ? '' : 'disabled'}>上一页</button>
+      <button class="btn-sm" onclick="nextAuditPage()" ${auditData.hasMore ? '' : 'disabled'}>下一页</button>
+      <span class="toolbar-note">每页 ${auditData.limit || auditFilters.limit} 条，当前偏移 ${auditData.offset || 0}</span>
+    </div>
+    <div class="chip-row">
+      ${AUDIT_ACTION_PRESETS.map(action => `<button class="chip ${auditFilters.action===action?'active':''}" onclick="quickSetAuditAction('${action}')">${esc(action)}</button>`).join('')}
+    </div>
+    ${summary.length ? `<div class="filter-summary">${summary.map(item => `<span class="filter-tag">${esc(item)}</span>`).join('')}</div>` : ''}
+    ${items.length ? `<table><thead><tr><th>时间</th><th>Action</th><th>操作者</th><th>厂区</th><th>目标</th><th>来源</th><th>Payload</th></tr></thead><tbody>
+      ${items.map(a=>`<tr>
+        <td class="mono">${new Date(a.created_at).toLocaleString('zh-CN')}</td>
+        <td><span class="badge badge-active">${esc(a.action)}</span></td>
+        <td>${esc(a.actor_name || '—')}<br><span class="mono">${esc(a.actor_email || a.actor_user_id || '—')}</span></td>
+        <td>${esc(a.site_name || '—')}<br><span class="mono">${esc(a.site_id || '—')}</span></td>
+        <td>${esc(a.target_type)}<br><span class="mono">${esc(a.target_id)}</span></td>
+        <td><span class="mono">${esc(a.ip || '—')}</span><br><span class="mono">${esc(a.actor_role || '—')}</span></td>
+        <td><div class="payload-box">${esc(a.payload_json || '{}')}</div></td>
+      </tr>`).join('')}
+    </tbody></table>` : `<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">当前筛选条件下暂无审计日志</div>`}
+  </div>`;
+}
+
+function filterTable(q, tableId) {
+  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  q = q.toLowerCase();
+  rows.forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none');
+}
+
+async function applyAuditFilters() {
+  auditFilters = {
+    q: document.getElementById('auditQ')?.value.trim() || '',
+    action: document.getElementById('auditAction')?.value.trim() || '',
+    siteId: document.getElementById('auditSiteId')?.value.trim() || '',
+    actorUserId: document.getElementById('auditActorUserId')?.value.trim() || '',
+    limit: auditFilters.limit || 50,
+    offset: 0,
+  };
+  await loadAuditLogs();
+  renderTab('audits');
+}
+
+function onAuditFilterKeydown(event) {
+  if (event.key === 'Enter') applyAuditFilters();
+}
+
+async function quickSetAuditAction(action) {
+  auditFilters.action = auditFilters.action === action ? '' : action;
+  auditFilters.offset = 0;
+  await loadAuditLogs();
+  renderTab('audits');
+}
+
+async function resetAuditFilters() {
+  auditFilters = { q: '', action: '', siteId: '', actorUserId: '', limit: 50, offset: 0 };
+  await loadAuditLogs();
+  renderTab('audits');
+}
+
+async function prevAuditPage() {
+  auditFilters.offset = Math.max(0, (auditData.offset || 0) - (auditData.limit || 50));
+  await loadAuditLogs();
+  renderTab('audits');
+}
+
+async function nextAuditPage() {
+  if (!auditData.hasMore) return;
+  auditFilters.offset = (auditData.offset || 0) + (auditData.limit || 50);
+  await loadAuditLogs();
+  renderTab('audits');
+}
+
+async function confirmOrder(id) {
+  if (!confirm('确认此订单并激活订阅？')) return;
+  await adminApi(`/api/admin/orders/${id}/confirm`, {method:'POST'});
+  await loadAll();
+}
+
+async function rejectOrder(id) {
+  const reason = prompt('拒绝原因：');
+  if (reason === null) return;
+  await adminApi(`/api/admin/orders/${id}/reject`, {method:'POST', body:JSON.stringify({reason})});
+  await loadAll();
+}
+
+async function approveRebind(id) {
+  const row = pendingRebinds.find(r => r.id === id);
+  const isHighRisk = !!row?.is_high_risk || Number(row?.risk_score || 0) >= 70;
+  if (!confirm('确认通过该网络重绑申请？通过后将替换厂区当前活跃网络绑定。')) return;
+  const note = prompt('审核备注（可选）：', '') || '';
+  let forceApprove = false;
+  if (isHighRisk) {
+    forceApprove = confirm('该申请为高风险，是否继续强制通过？');
+    if (!forceApprove) return;
+  }
+  await adminApi(`/api/admin/network-rebind-requests/${id}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ note, forceApprove }),
+  });
+  await loadAll();
+}
+
+async function rejectRebind(id) {
+  const reason = prompt('请输入拒绝原因：', '');
+  if (reason === null) return;
+  await adminApi(`/api/admin/network-rebind-requests/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+  await loadAll();
+}
+
+async function updateUserStatus(id, status) {
+  await adminApi(`/api/admin/users/${id}/status`, {method:'POST', body:JSON.stringify({status})});
+  await loadAll();
+}
+
+async function activateSub(id, plan) {
+  if (!confirm(`为此订阅激活一个${plan==='monthly'?'月度':'年度'}套餐？`)) return;
+  await adminApi(`/api/admin/subscriptions/${id}/activate`, {method:'POST', body:JSON.stringify({plan})});
+  await loadAll();
+}
+
+async function suspendSub(id) {
+  if (!confirm('暂停后将禁止该厂区生成新二维码，是否继续？')) return;
+  await adminApi(`/api/admin/subscriptions/${id}/suspend`, { method:'POST' });
+  await loadAll();
+}
+
+async function resumeSub(id) {
+  if (!confirm('恢复后将按当前有效期自动回到 active / grace / expired，是否继续？')) return;
+  await adminApi(`/api/admin/subscriptions/${id}/resume`, { method:'POST' });
+  await loadAll();
+}
+
+async function unbindIp(id) {
+  if (!confirm('解绑此订阅的 WiFi IP？用户下次使用时将重新绑定。')) return;
+  await adminApi(`/api/admin/subscriptions/${id}/unbind-ip`, {method:'POST'});
+  await loadAll();
+}
+
+async function cancelSub(id) {
+  if (!confirm('取消此订阅？用户将无法继续使用。')) return;
+  await adminApi(`/api/admin/subscriptions/${id}/cancel`, {method:'POST'});
+  await loadAll();
+}
+
+async function logout() {
+  await adminApi('/api/auth/logout', {method:'POST'});
+  location.href='/login';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init().catch(console.error);
+</script>
+</body>
+</html>
